@@ -32,6 +32,9 @@ export const metadata: Metadata = {
   alternates: {
     canonical: "https://www.kiraliksevgili.com/",
   },
+  verification: {
+    google: "iDPWL_1NDoz-Bi54EP-8DqDpxKNl2n81F_nP9F7wIDc",
+  },
 };
 
 export default function RootLayout({
