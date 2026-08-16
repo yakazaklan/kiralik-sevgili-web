@@ -58,7 +58,7 @@ export default function AlanyaSEOPage() {
             </p>
           </div>
 
-          <RealProfiles filter="all" city="Alanya" />
+          <RealProfiles filter="all" city="Alanya" gender="all" />
         </div>
       </section>
 

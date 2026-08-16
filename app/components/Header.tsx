@@ -17,8 +17,8 @@ export default function Header() {
   return (
     <header className="sticky top-0 z-50 w-full border-b border-[#1a1a1a] bg-black/90 backdrop-blur-2xl">
       <div className="mx-auto flex max-w-7xl flex-col gap-4 px-6 py-4">
-        <div className="flex items-center justify-between">
-          <Link href="/" className="flex items-center gap-3">
+        <div className="flex items-center justify-between relative">
+          <Link href="/" className="flex items-center gap-3 shrink-0">
             <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-gradient-to-br from-[#ff2d55] to-[#d4af37] shadow-lg shadow-pink-500/20">
               <span className="text-xl">💗</span>
             </div>
@@ -26,10 +26,19 @@ export default function Header() {
               Kiralık <span className="premium-gradient-text">Sevgili</span>
             </h1>
           </Link>
-          <button className="rounded-full bg-white px-6 py-2 text-[10px] font-black uppercase tracking-widest text-black transition hover:bg-[#ff2d55] hover:text-white active:scale-95">
+
+          {/* WARNING MESSAGE */}
+          <div className="hidden md:flex absolute left-1/2 -translate-x-1/2 items-center">
+             <span className="text-[11px] font-black text-[#ff2d55] uppercase tracking-[0.15em] bg-[#ff2d55]/10 px-6 py-2.5 rounded-full border border-[#ff2d55]/20 animate-pulse whitespace-nowrap shadow-[0_0_20px_-5px_rgba(255,45,85,0.4)]">
+               ⚠️ Bu bir eskort sayfası değildir. Sadece sosyal refakat hizmeti verilir.
+             </span>
+          </div>
+
+          <button className="rounded-full bg-white px-6 py-2 text-[10px] font-black uppercase tracking-widest text-black transition hover:bg-[#ff2d55] hover:text-white active:scale-95 shrink-0 ml-4">
             Giriş Yap
           </button>
         </div>
+
 
         {/* APP-LIKE NAVIGATION */}
         <nav className="flex items-center justify-around border-t border-[#1a1a1a] pt-4 md:justify-center md:gap-16">

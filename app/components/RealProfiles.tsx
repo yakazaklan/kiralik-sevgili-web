@@ -8,40 +8,66 @@ import Link from "next/link";
 type UserProfile = {
   id: string;
   name: string;
+  name2?: string;
   age?: string;
+  age2?: string;
   city?: string;
   district?: string;
   bio?: string;
   image?: string;
   isVerified: boolean;
   isElite: boolean;
+  isActive?: boolean;
   meetingCount: number;
-  hourlyPrice?: string;
-  dailyPrice?: string;
+  price?: string;
+  priceDaily?: string;
+  priceWeekly?: string;
+  gender?: string;
 };
 
 interface RealProfilesProps {
   filter: string;
   city: string;
+  gender: string;
 }
 
 function getImage(data: any): string | undefined {
-  // Tüm olası ana resim alanlarını kontrol et (URL olabilecek tüm isimler)
-  const mainImage = data.profileImageUrl || data.photoUrl || data.photoURL || data.profileImage || data.image || data.photo;
-  if (mainImage && typeof mainImage === 'string' && mainImage.startsWith('http')) return mainImage;
+  try {
+    // 1. Doğrudan URL olabilecek alanlar
+    const candidates = [
+      data.profileImageUrl,
+      data.photoUrl,
+      data.photoURL,
+      data.image,
+      data.photo,
+      data.profileImage,
+      data.avatar,
+      data.photoUrls?.[0],
+      data.photos?.[0]
+    ];
 
-  // Eğer ana resim yoksa listelerden al (photoUrls veya photos dizisi)
-  const list = data.photoUrls || data.photos;
-  if (Array.isArray(list) && list.length > 0) {
-    const first = list.find(item => typeof item === 'string' && item.startsWith('http'));
-    if (first) return first;
+    for (const val of candidates) {
+      if (val && typeof val === 'string' && val.trim().startsWith('http')) {
+        return val.trim();
+      }
+    }
+
+    // 2. Dizi içindeki geçerli URL'leri ara
+    const arrays = [data.photoUrls, data.photos];
+    for (const arr of arrays) {
+      if (Array.isArray(arr) && arr.length > 0) {
+        const found = arr.find(item => typeof item === 'string' && item.trim().startsWith('http'));
+        if (found) return (found as string).trim();
+      }
+    }
+  } catch (e) {
+    console.error("getImage error:", e);
   }
-
   return undefined;
 }
 
 
-export default function RealProfiles({ filter, city }: RealProfilesProps) {
+export default function RealProfiles({ filter, city, gender }: RealProfilesProps) {
   const [profiles, setProfiles] = useState<UserProfile[]>([]);
   const [loading, setLoading] = useState(true);
 
@@ -71,35 +97,89 @@ export default function RealProfiles({ filter, city }: RealProfilesProps) {
 
           const meetingCount = Number(data.meetingCount || 0);
           const isElite = isVerified && (data.isElite === true || meetingCount > 0);
+          const isActive = raw.isActive === true;
           const image = getImage(data);
 
           return {
             id: doc.id,
             name: data.name || data.displayName || "Kullanıcı",
+            name2: data.name2 || data.displayName2,
             age: data.age ? String(data.age) : "",
+            age2: data.age2 ? String(data.age2) : undefined,
             city: data.city || data.sehir || "Türkiye",
             district: data.district || data.ilce || "",
             bio: data.bio || data.description || "Sosyal arkadaşlık ilanı.",
             image: image,
             isVerified,
             isElite,
+            isActive,
             meetingCount,
-            hourlyPrice: data.hourlyPrice || data.saatlikFiyat,
-            dailyPrice: data.dailyPrice || data.gunlukFiyat
+            price: data.price || data.hourlyPrice || data.saatlikFiyat,
+            priceDaily: data.priceDaily || data.dailyPrice || data.gunlukFiyat,
+            priceWeekly: data.priceWeekly || data.weeklyPrice || data.haftalikFiyat,
+            gender: data.gender || data.cinsiyet || "Belirtilmemiş"
           };
         });
 
         let filtered = loadedProfiles;
+
+        // Cinsiyet Filtreleme - Daha esnek eşleştirme
+        if (gender !== "all") {
+          const searchGender = gender.toLowerCase();
+          filtered = filtered.filter(p => {
+            if (!p.gender) return false;
+            const userGender = p.gender.toLowerCase();
+
+            // Kadın/Kadin eşleşmesi
+            if (searchGender === "kadın" || searchGender === "kadin") {
+              return userGender === "kadın" || userGender === "kadin" || userGender === "bayan" || userGender === "female";
+            }
+
+            // Erkek eşleşmesi
+            if (searchGender === "erkek") {
+              return userGender === "erkek" || userGender === "bay" || userGender === "male";
+            }
+
+            // Çift eşleşmesi
+            if (searchGender === "çift" || searchGender === "cift") {
+              return userGender === "çift" || userGender === "cift" || userGender === "couple";
+            }
+
+            return userGender === searchGender;
+          });
+        }
+
         if (filter === "elite") filtered = filtered.filter(p => p.isElite);
         else if (filter === "verified") filtered = filtered.filter(p => p.isVerified);
 
         if (city !== "all") {
           const searchCity = city.toLowerCase();
-          filtered = filtered.filter(p =>
-            p.city?.toLowerCase().includes(searchCity) ||
-            p.district?.toLowerCase().includes(searchCity)
-          );
+          filtered = filtered.filter(p => {
+            const pCity = p.city?.toLowerCase() || "";
+            const pDistrict = p.district?.toLowerCase() || "";
+
+            // Alanya-Antalya Ayrımı: Antalya seçildiğinde 200km uzaklıktaki Alanya ilanlarını gösterme
+            if (searchCity === "antalya" && (pCity.includes("alanya") || pDistrict.includes("alanya"))) {
+              return false;
+            }
+
+            // Alanya seçildiğinde sadece Alanya sonuçlarını getir
+            if (searchCity === "alanya") {
+              return pCity.includes("alanya") || pDistrict.includes("alanya");
+            }
+
+            return pCity.includes(searchCity) || pDistrict.includes(searchCity);
+          });
         }
+
+        // Sıralama Mantığı: Elite > Onaylı > Onaysız
+        filtered.sort((a, b) => {
+          if (a.isElite && !b.isElite) return -1;
+          if (!a.isElite && b.isElite) return 1;
+          if (a.isVerified && !b.isVerified) return -1;
+          if (!a.isVerified && b.isVerified) return 1;
+          return 0;
+        });
 
         setProfiles(filtered);
       } catch (err) {
@@ -109,7 +189,7 @@ export default function RealProfiles({ filter, city }: RealProfilesProps) {
       }
     }
     loadProfiles();
-  }, [filter, city]);
+  }, [filter, city, gender]);
 
   if (loading) return (
     <div className="py-32 text-center">
@@ -129,111 +209,148 @@ export default function RealProfiles({ filter, city }: RealProfilesProps) {
   );
 
   return (
-    <div className="flex flex-col gap-8 max-w-4xl mx-auto">
-      {/* List Başı SEO Notu */}
-      <div className="px-6 py-4 rounded-3xl bg-[#0a0a0a] border border-[#1a1a1a] text-center">
-        <p className="text-[10px] font-bold text-gray-500 uppercase tracking-widest">
-          {city === "Alanya" ? "Alanya Sosyal Refakatçi ve Etkinlik Arkadaşı İlanları" : "Türkiye Geneli VİP Sosyal Refakat İlanları"}
-          <span className="mx-3 opacity-20">|</span>
-          <span className="text-[#ff2d55]/80 underline decoration-dotted">Kesinlikle Eskort Sitesi Değildir</span>
-        </p>
+    <div className="space-y-12">
+      {/* List Başı SEO & Info Bar */}
+      <div className="flex flex-col md:flex-row items-center justify-between gap-4 px-8 py-5 rounded-[2rem] bg-gradient-to-r from-[#0a0a0a] to-[#111] border border-[#1a1a1a] shadow-2xl">
+        <div className="flex items-center gap-3">
+          <div className="w-2 h-2 rounded-full bg-[#ff2d55] animate-pulse"></div>
+          <p className="text-[10px] font-black text-gray-400 uppercase tracking-[0.2em]">
+            {city === "all" ? "Türkiye Geneli" : city.toUpperCase()} AKTİF REFAKATÇİLER
+          </p>
+        </div>
       </div>
 
-      {profiles.map((profile) => (
-        <Link
-          href={`/profil/${profile.id}`}
-          key={profile.id}
-          className="premium-card group flex flex-col md:flex-row overflow-hidden rounded-[2.5rem] bg-[#0a0a0a] border border-[#1a1a1a] transition-all hover:border-[#ff2d55]/50 hover:shadow-2xl hover:shadow-pink-500/5"
-        >
-          {/* Sol: Resim */}
-          <div className="relative h-72 w-full md:h-auto md:w-72 shrink-0 overflow-hidden bg-[#050505]">
-            {profile.image ? (
-              <img
-                src={profile.image}
-                alt={profile.name}
-                className="h-full w-full object-cover transition duration-700 group-hover:scale-110"
-              />
-            ) : (
-              <div className="flex h-full items-center justify-center text-6xl opacity-10">👤</div>
-            )}
-
-            <div className="absolute left-4 top-4 flex flex-col gap-2">
-              {profile.isElite ? (
-                <span className="rounded-full bg-[#00B2FF] px-3 py-1 text-[9px] font-black uppercase tracking-widest text-white shadow-lg">
-                  ONAYLI
-                </span>
-              ) : profile.isVerified ? (
-                <span className="rounded-full bg-[#4CAF50] px-3 py-1 text-[9px] font-black uppercase tracking-widest text-white shadow-lg">
-                  ONAYLI
-                </span>
+      {/* Grid Layout - Premium Gallery */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8">
+        {profiles.map((profile) => (
+          <Link
+            href={`/profil/${profile.id}`}
+            key={profile.id}
+            className="premium-card group relative flex flex-col h-full overflow-hidden rounded-[2.5rem] bg-[#0a0a0a] border border-[#1a1a1a] transition-all duration-500 hover:border-[#ff2d55]/40 hover:shadow-[0_0_40px_-10px_rgba(255,45,85,0.2)] hover:-translate-y-2"
+          >
+            {/* Image Container with Fixed Aspect Ratio */}
+            <div className="relative aspect-[4/5] w-full overflow-hidden bg-[#050505]">
+              {profile.image ? (
+                <img
+                  src={profile.image}
+                  alt={profile.name}
+                  referrerPolicy="no-referrer"
+                  className="h-full w-full object-cover transition duration-1000 group-hover:scale-110 group-hover:rotate-1"
+                  loading="lazy"
+                />
               ) : (
-                <span className="rounded-full bg-orange-500 px-3 py-1 text-[9px] font-black uppercase tracking-widest text-white shadow-lg">
-                  ONAYSIZ
-                </span>
+                <div className="flex h-full items-center justify-center text-7xl opacity-5 bg-gradient-to-b from-[#111] to-black">👤</div>
               )}
-            </div>
-          </div>
 
-          {/* Sağ: Detaylar */}
-          <div className="flex flex-1 flex-col p-8 md:p-10">
-            <div className="flex items-start justify-between">
-              <div>
-                <h3 className="text-3xl font-black text-white group-hover:text-[#ff2d55] transition-colors leading-none tracking-tighter">
-                  {profile.name}{profile.age ? `, ${profile.age}` : ""}
-                </h3>
-                <div className="mt-3 flex items-center text-[10px] font-black text-gray-500 uppercase tracking-[0.2em]">
-                  <span className="mr-2 text-base">📍</span> {profile.city} {profile.district && `• ${profile.district}`}
-                </div>
+              {/* Badges Overlay */}
+              <div className="absolute top-5 left-5 flex flex-col gap-2 z-10">
+                {profile.isElite ? (
+                  <span className="backdrop-blur-md bg-black/40 border border-[#00B2FF]/50 px-4 py-1.5 rounded-full text-[8px] font-black uppercase tracking-[0.2em] text-[#00B2FF] shadow-2xl">
+                    ELITE
+                  </span>
+                ) : profile.isVerified ? (
+                  <span className="backdrop-blur-md bg-black/40 border border-[#4CAF50]/50 px-4 py-1.5 rounded-full text-[8px] font-black uppercase tracking-[0.2em] text-[#4CAF50] shadow-2xl">
+                    ONAYLI
+                  </span>
+                ) : (
+                  <span className="backdrop-blur-md bg-black/40 border border-orange-500/50 px-4 py-1.5 rounded-full text-[8px] font-black uppercase tracking-[0.2em] text-orange-500 shadow-2xl">
+                    ONAYSIZ
+                  </span>
+                )}
+                {profile.isActive && (
+                  <span className="backdrop-blur-md bg-green-500/20 border border-green-500/50 px-3 py-1.5 rounded-full text-[7px] font-black uppercase tracking-[0.2em] text-green-400 animate-pulse shadow-2xl">
+                    ● ŞU AN MÜSAİT
+                  </span>
+                )}
               </div>
 
-              <div className="flex flex-col items-end gap-1">
-                {profile.hourlyPrice && (
-                  <div className="text-right">
-                    <span className="text-2xl font-black text-white tracking-tighter">{profile.hourlyPrice}</span>
-                    <span className="ml-1 text-[9px] font-black text-gray-600 uppercase tracking-tighter">/ Saat</span>
+              {/* Price Tag Overlay */}
+              <div className="absolute bottom-5 right-5 z-10 flex flex-col gap-2">
+                {profile.price && (
+                  <div className="backdrop-blur-xl bg-black/60 border border-white/10 px-4 py-1.5 rounded-xl shadow-2xl flex flex-col items-end">
+                    <span className="text-base font-black text-white tracking-tighter">₺{profile.price}</span>
+                    <span className="text-[7px] font-black text-gray-400 uppercase tracking-tighter">saatlik</span>
+                  </div>
+                )}
+                {profile.priceDaily && (
+                  <div className="backdrop-blur-xl bg-black/60 border border-white/10 px-4 py-1.5 rounded-xl shadow-2xl flex flex-col items-end">
+                    <span className="text-base font-black text-[#ff2d55] tracking-tighter">₺{profile.priceDaily}</span>
+                    <span className="text-[7px] font-black text-gray-400 uppercase tracking-tighter">günlük</span>
                   </div>
                 )}
               </div>
+
+              {/* Bottom Gradient for Text Legibility */}
+              <div className="absolute inset-0 bg-gradient-to-t from-black via-transparent to-transparent opacity-60"></div>
             </div>
 
-            <p className="mt-6 line-clamp-2 text-base leading-relaxed text-gray-400 font-medium italic">
-              "{profile.bio}"
-            </p>
-
-            <div className="mt-auto pt-10 flex items-center justify-between border-t border-[#1a1a1a]/50">
-              <div className="flex gap-8">
-                <div className="flex flex-col">
-                  <span className="text-[8px] font-black text-gray-600 uppercase tracking-[0.3em]">Referans</span>
-                  <span className="text-sm font-black text-white">{profile.meetingCount} Randevu</span>
-                </div>
-                <div className="flex flex-col">
-                  <span className="text-[8px] font-black text-gray-600 uppercase tracking-[0.3em]">Güvenlik</span>
-                  <span className={`text-sm font-black flex items-center gap-1 ${
-                    profile.isElite ? 'text-[#00B2FF]' :
-                    profile.isVerified ? 'text-[#4CAF50]' : 'text-orange-500'
+            {/* Content Area - Fixed Height for Uniformity */}
+            <div className="flex flex-col flex-1 p-8 space-y-4">
+              <div className="space-y-1">
+                <div className="flex items-center justify-between">
+                  <h3 className="text-2xl font-black text-white group-hover:text-[#ff2d55] transition-colors leading-none tracking-tighter truncate max-w-[80%]">
+                    {profile.gender?.toLowerCase() === "çift" || profile.gender?.toLowerCase() === "couple" ? (
+                      `${profile.name?.[0] || "?"}. & ${profile.name2?.[0] || "?"}.`
+                    ) : (
+                      `${profile.name?.[0] || "?"}...`
+                    )}
+                    {profile.age ? `, ${profile.age}` : ""}
+                    {profile.age2 ? ` & ${profile.age2}` : ""}
+                  </h3>
+                  <div className={`px-3 py-1 rounded-full text-[8px] font-black uppercase tracking-widest border ${
+                    profile.gender?.toLowerCase() === 'erkek' || profile.gender?.toLowerCase() === 'male'
+                      ? 'bg-blue-500/10 border-blue-500/30 text-blue-500'
+                      : profile.gender?.toLowerCase() === 'kadın' || profile.gender?.toLowerCase() === 'female'
+                      ? 'bg-pink-500/10 border-pink-500/30 text-pink-500'
+                      : 'bg-amber-500/10 border-amber-500/30 text-amber-500'
                   }`}>
-                    <span className="text-xs">verified</span>
-                    {profile.isVerified ? 'ONAYLI' : 'ONAYSIZ'}
-                  </span>
+                    {profile.gender?.toLowerCase() === "kadın" || profile.gender?.toLowerCase() === "female" ? "Kadın ♀️" :
+                     profile.gender?.toLowerCase() === "erkek" || profile.gender?.toLowerCase() === "male" ? "Erkek ♂️" : "Çift 👥"}
+                  </div>
+                </div>
+                <div className="flex items-center text-[9px] font-black text-gray-500 uppercase tracking-[0.2em]">
+                  <span className="text-[#ff2d55] mr-1.5">📍</span> {profile.city?.toUpperCase() || "TÜRKİYE"}
                 </div>
               </div>
 
-              <div className="rounded-full bg-[#1a1a1a] px-8 py-3 text-[10px] font-black uppercase tracking-widest text-white transition-all group-hover:bg-[#ff2d55] group-hover:scale-105 active:scale-95">
-                DETAYLAR
+              <p className="text-sm leading-relaxed text-gray-400 font-medium italic line-clamp-2 h-[2.5rem]">
+                "{profile.bio}"
+              </p>
+
+              <div className="pt-6 mt-auto border-t border-[#1a1a1a] flex items-center justify-between">
+                <div className="flex flex-col">
+                  <span className="text-[7px] font-black text-gray-600 uppercase tracking-[0.3em] mb-1">Popülarite</span>
+                  <div className="flex items-center gap-1.5">
+                    <div className="flex gap-0.5">
+                      {[1, 2, 3, 4, 5].map((s) => (
+                        <div key={s} className={`w-1 h-1 rounded-full ${s <= 4 ? 'bg-[#ff2d55]' : 'bg-gray-800'}`}></div>
+                      ))}
+                    </div>
+                    <span className="text-[9px] font-black text-white uppercase">{profile.meetingCount} Randevu</span>
+                  </div>
+                </div>
+
+                <div className="w-10 h-10 rounded-full bg-[#111] border border-[#222] flex items-center justify-center text-gray-500 group-hover:bg-[#ff2d55] group-hover:text-white group-hover:border-[#ff2d55] transition-all duration-300">
+                  <span className="text-xs">→</span>
+                </div>
               </div>
             </div>
-          </div>
-        </Link>
-      ))}
+          </Link>
+        ))}
+      </div>
 
-      {/* Alt SEO Metni */}
-      <div className="mt-12 p-10 rounded-[2.5rem] bg-[#050505] border border-[#1a1a1a] text-center">
-        <h4 className="text-[11px] font-black text-gray-400 uppercase tracking-[0.4em] mb-4">Türkiye ve Alanya Sosyal Arkadaşlık Platformu</h4>
-        <p className="text-xs text-gray-600 leading-loose font-medium">
-          Platformumuz, Alanya dahil Türkiye genelinde sosyal etkinliklerinize prestij katacak gerçek kişilerle tanışmanızı hedefler.
-          Tekrar önemle belirtmek isteriz ki; burası bir <strong>Alanya eskort</strong> sayfası değildir.
-          Eskort, cinsel içerikli hizmet veya benzeri yasa dışı talepler platform kurallarımız gereği kesinlikle yasaktır ve hesap kapatma sebebidir.
-          Güvenli, seviyeli ve elit bir sosyal refakat deneyimi için Kiralık Sevgili her zaman yanınızda.
+      {/* Alt SEO Metni - Refined with Strategic SEO */}
+      <div className="mt-20 p-12 rounded-[3rem] bg-gradient-to-b from-[#0a0a0a] to-black border border-[#1a1a1a] text-center shadow-3xl">
+        <h4 className="text-[10px] font-black text-[#ff2d55] uppercase tracking-[0.5em] mb-6">Alanya Sosyal Refakat & VIP Eşlik Rehberi</h4>
+        <p className="text-xs text-gray-500 leading-loose font-medium max-w-3xl mx-auto">
+          Kiralık Sevgili, modern dünyanın sosyal ihtiyaçlarına elit ve güvenilir çözümler sunar.
+          Platformumuz, Alanya ve çevresinde özel davetlerinize, iş yemeklerinize veya sosyal aktivitelerinize eşlik edecek
+          profesyonel refakatçilerle bağlantı kurmanızı sağlar. Önemle belirtmek isteriz ki; Kiralık Sevgili platformu
+          bir <strong>Alanya eskort</strong> sayfası değildir ve <strong>eskort Alanya</strong> hizmeti sunmamaktadır.
+          Vizyonumuz, sadece yasal ve seviyeli sosyal birliktelikleri desteklemektir. <strong>Alanya eskort sitesi</strong>
+          arayan kullanıcılar için platformumuz uygun bir adres değildir; biz sadece elit sosyal arkadaşlık ve
+          VİP refakat hizmetleri odaklı bir topluluğuz. Gizlilik ve kalite standartlarımız gereği, tüm kullanıcılarımızın
+          güvenliği en üst düzeyde korunmaktadır.
         </p>
       </div>
     </div>

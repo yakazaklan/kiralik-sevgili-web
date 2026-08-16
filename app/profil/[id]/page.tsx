@@ -10,7 +10,10 @@ import { onAuthStateChanged } from "firebase/auth";
 type Profile = {
   id: string;
   name: string;
+  name2?: string;
   age: string;
+  age2?: string;
+  gender: string;
   city: string;
   district: string;
   bio: string;
@@ -22,6 +25,7 @@ type Profile = {
   prices: {
     hourly?: string;
     daily?: string;
+    weekly?: string;
     general?: string;
   };
   details: Record<string, any>;
@@ -84,7 +88,10 @@ export default function ProfilePage() {
         setProfile({
           id,
           name: data.name || data.displayName || "Kullanıcı",
+          name2: data.name2 || data.displayName2,
           age: String(data.age || ""),
+          age2: data.age2 ? String(data.age2) : undefined,
+          gender: data.gender || data.cinsiyet || "Belirtilmemiş",
           city: data.city || data.sehir || "Türkiye",
           district: data.district || data.ilce || "",
           bio: data.bio || "",
@@ -93,7 +100,12 @@ export default function ProfilePage() {
           isVerified,
           isElite,
           meetingCount,
-          prices,
+          prices: {
+            hourly: data.price || data.hourlyPrice || data.saatlikFiyat,
+            daily: data.priceDaily || data.dailyPrice || data.gunlukFiyat,
+            weekly: data.priceWeekly || data.weeklyPrice || data.haftalikFiyat,
+            general: data.price || data.ucret
+          },
           details: data
         });
       } catch (err) {
@@ -203,24 +215,52 @@ export default function ProfilePage() {
             </div>
 
             <h1 className="mt-8 text-7xl font-black tracking-tighter">
-              {profile.name}{profile.age ? `, ${profile.age}` : ""}
+              {profile.gender?.toLowerCase() === "çift" || profile.gender?.toLowerCase() === "couple" ? (
+                `${profile.name?.[0] || "?"}. & ${profile.name2?.[0] || "?"}.`
+              ) : (
+                `${profile.name?.[0] || "?"}...`
+              )}
+              {profile.age ? `, ${profile.age}` : ""}
+              {profile.age2 ? ` & ${profile.age2}` : ""}
             </h1>
 
-            <div className="mt-2 flex items-center gap-2 text-2xl font-bold text-[#ff2d55]">
-              <span>📍</span>
-              <span className="uppercase tracking-tight">{profile.city} {profile.district && `• ${profile.district}`}</span>
+            <div className="mt-4 flex flex-wrap items-center gap-3">
+              <div className="flex items-center gap-2 text-2xl font-bold text-[#ff2d55]">
+                <span>📍</span>
+                <span className="uppercase tracking-tight">{profile.city} {profile.district && `• ${profile.district}`}</span>
+              </div>
+
+              <div className={`px-4 py-1.5 rounded-full text-[10px] font-black uppercase tracking-widest border ${
+                profile.gender?.toLowerCase() === 'erkek' || profile.gender?.toLowerCase() === 'male'
+                  ? 'bg-blue-500/10 border-blue-500/30 text-blue-500'
+                  : profile.gender?.toLowerCase() === 'kadın' || profile.gender?.toLowerCase() === 'female'
+                  ? 'bg-pink-500/10 border-pink-500/30 text-pink-500'
+                  : 'bg-purple-500/10 border-purple-500/30 text-purple-500'
+              }`}>
+                {profile.gender === "Kadın" ? "Kadın ♀️" : profile.gender === "Erkek" ? "Erkek ♂️" : "Çift 👥"}
+              </div>
             </div>
 
             {/* Fiyat Kartları */}
-            <div className="mt-12 grid grid-cols-2 gap-6">
-              <div className="rounded-[2.5rem] bg-[#0a0a0a] border border-[#1a1a1a] p-10">
-                <h4 className="text-[10px] font-black text-gray-600 uppercase tracking-[0.3em]">Saatlik</h4>
-                <p className="mt-3 text-4xl font-black text-white">{profile.prices.hourly || "—"}</p>
-              </div>
-              <div className="rounded-[2.5rem] bg-[#0a0a0a] border border-[#1a1a1a] p-10">
-                <h4 className="text-[10px] font-black text-gray-600 uppercase tracking-[0.3em]">Günlük</h4>
-                <p className="mt-3 text-4xl font-black text-white">{profile.prices.daily || "—"}</p>
-              </div>
+            <div className="mt-12 grid grid-cols-2 md:grid-cols-3 gap-6">
+              {profile.prices.hourly && (
+                <div className="rounded-[2.5rem] bg-[#0a0a0a] border border-[#1a1a1a] p-10 hover:border-[#ff2d55]/30 transition-colors">
+                  <h4 className="text-[10px] font-black text-gray-600 uppercase tracking-[0.3em]">Saatlik</h4>
+                  <p className="mt-3 text-4xl font-black text-white">₺{profile.prices.hourly}</p>
+                </div>
+              )}
+              {profile.prices.daily && (
+                <div className="rounded-[2.5rem] bg-[#0a0a0a] border border-[#1a1a1a] p-10 hover:border-[#ff2d55]/30 transition-colors">
+                  <h4 className="text-[10px] font-black text-gray-600 uppercase tracking-[0.3em]">Günlük</h4>
+                  <p className="mt-3 text-4xl font-black text-white">₺{profile.prices.daily}</p>
+                </div>
+              )}
+              {profile.prices.weekly && (
+                <div className="rounded-[2.5rem] bg-[#0a0a0a] border border-[#1a1a1a] p-10 hover:border-[#ff2d55]/30 transition-colors">
+                  <h4 className="text-[10px] font-black text-gray-600 uppercase tracking-[0.3em]">Haftalık</h4>
+                  <p className="mt-3 text-4xl font-black text-white">₺{profile.prices.weekly}</p>
+                </div>
+              )}
             </div>
 
             <div className="mt-12 space-y-12">
