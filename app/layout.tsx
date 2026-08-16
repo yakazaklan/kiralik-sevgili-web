@@ -35,6 +35,9 @@ export const metadata: Metadata = {
   verification: {
     google: "iDPWL_1NDoz-Bi54EP-8DqDpxKNl2n81F_nP9F7wIDc",
   },
+  other: {
+    "google-site-verification": "iDPWL_1NDoz-Bi54EP-8DqDpxKNl2n81F_nP9F7wIDc",
+  },
 };
 
 export default function RootLayout({
@@ -44,6 +47,9 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="tr">
+      <head>
+        <meta name="google-site-verification" content="iDPWL_1NDoz-Bi54EP-8DqDpxKNl2n81F_nP9F7wIDc" />
+      </head>
       <body className="antialiased bg-black text-white">
         <Header />
         {children}
