@@ -10,6 +10,7 @@ type UserProfile = {
   name: string;
   age?: string;
   city?: string;
+  district?: string;
   bio?: string;
   image?: string;
   isVerified: boolean;
@@ -25,7 +26,18 @@ interface RealProfilesProps {
 }
 
 function getImage(data: any): string | undefined {
-  return data.profileImageUrl || data.photoUrl || data.photoURL || (data.photoUrls && data.photoUrls[0]);
+  // Tüm olası ana resim alanlarını kontrol et (URL olabilecek tüm isimler)
+  const mainImage = data.profileImageUrl || data.photoUrl || data.photoURL || data.profileImage || data.image || data.photo;
+  if (mainImage && typeof mainImage === 'string' && mainImage.startsWith('http')) return mainImage;
+
+  // Eğer ana resim yoksa listelerden al (photoUrls veya photos dizisi)
+  const list = data.photoUrls || data.photos;
+  if (Array.isArray(list) && list.length > 0) {
+    const first = list.find(item => typeof item === 'string' && item.startsWith('http'));
+    if (first) return first;
+  }
+
+  return undefined;
 }
 
 
@@ -45,22 +57,30 @@ export default function RealProfiles({ filter, city }: RealProfilesProps) {
           const raw = doc.data();
 
           // GÜVENLİK: Kimlik doğrulaması sadece ana dökümanda (root) varsa kabul edilir.
-          // Kullanıcının kendi düzenleyebildiği 'profile' alanı içindeki veriler baz alınmaz.
           const isVerified = raw.isIdVerified === true;
 
           const nested = raw.profile && typeof raw.profile === "object" ? raw.profile : {};
-          const data = { ...raw, ...nested };
+
+          // Daha güvenli birleştirme: Boş olan alanların veriyi ezmesini önle
+          const data = { ...raw };
+          Object.keys(nested).forEach(key => {
+            if (nested[key] !== undefined && nested[key] !== null && nested[key] !== "") {
+              data[key] = nested[key];
+            }
+          });
 
           const meetingCount = Number(data.meetingCount || 0);
           const isElite = isVerified && (data.isElite === true || meetingCount > 0);
+          const image = getImage(data);
 
           return {
             id: doc.id,
             name: data.name || data.displayName || "Kullanıcı",
             age: data.age ? String(data.age) : "",
             city: data.city || data.sehir || "Türkiye",
+            district: data.district || data.ilce || "",
             bio: data.bio || data.description || "Sosyal arkadaşlık ilanı.",
-            image: getImage(data),
+            image: image,
             isVerified,
             isElite,
             meetingCount,
@@ -74,8 +94,10 @@ export default function RealProfiles({ filter, city }: RealProfilesProps) {
         else if (filter === "verified") filtered = filtered.filter(p => p.isVerified);
 
         if (city !== "all") {
+          const searchCity = city.toLowerCase();
           filtered = filtered.filter(p =>
-            p.city?.toLowerCase().includes(city.toLowerCase())
+            p.city?.toLowerCase().includes(searchCity) ||
+            p.district?.toLowerCase().includes(searchCity)
           );
         }
 
@@ -160,7 +182,7 @@ export default function RealProfiles({ filter, city }: RealProfilesProps) {
                   {profile.name}{profile.age ? `, ${profile.age}` : ""}
                 </h3>
                 <div className="mt-3 flex items-center text-[10px] font-black text-gray-500 uppercase tracking-[0.2em]">
-                  <span className="mr-2 text-base">📍</span> {profile.city}
+                  <span className="mr-2 text-base">📍</span> {profile.city} {profile.district && `• ${profile.district}`}
                 </div>
               </div>
 

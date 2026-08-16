@@ -13,11 +13,11 @@ export default function Home() {
     <main className="min-h-screen bg-black text-white selection:bg-pink-500/30">
       {/* SEO & DISCLAIMER SECTION (HIDDEN BUT FOR GOOGLE) */}
       <div className="sr-only">
-        <h2>Alanya Eskort Sayfası Değildir</h2>
+        <h2>Türkiye Sosyal Arkadaşlık ve Refakat Platformu</h2>
         <p>
-          Kiralık Sevgili platformu kesinlikle Alanya eskort hizmeti sunmaz. Alanya eskort arayışı için uygun bir yer değildir.
-          Biz Alanya ve Türkiye genelinde sosyal arkadaşlık, etkinlik refakatçisi ve VİP sosyal eşlik hizmetleri sunan bir platformuz.
-          Alanya sosyal arkadaşlık ilanları için en güvenilir adres.
+          Kiralık Sevgili platformu Türkiye genelinde ve özellikle Alanya, İstanbul, Ankara, İzmir, Antalya gibi şehirlerde sosyal arkadaşlık, etkinlik refakatçisi ve VİP sosyal eşlik hizmetleri sunan bir platformdur.
+          Kesinlikle eskort hizmeti sunmaz. Alanya eskort sitesi değildir.
+          Alanya sosyal arkadaşlık ilanları ve Türkiye geneli refakat hizmetleri için en güvenilir adres.
         </p>
       </div>
 
@@ -71,7 +71,7 @@ export default function Home() {
                   cityFilter === "all" ? "border-[#ff2d55] bg-[#ff2d55]/10 text-white" : "border-[#1a1a1a] bg-[#0a0a0a] text-gray-500 hover:border-gray-700"
                 }`}
               >
-                HEPSİ
+                TÜRKİYE GENELİ
               </button>
               <button
                 onClick={() => setCityFilter("Alanya")}
