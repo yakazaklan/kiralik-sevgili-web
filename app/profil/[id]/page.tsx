@@ -197,16 +197,21 @@ export default function ProfilePage() {
           <div className="lg:col-span-7 flex flex-col">
             <div className="flex items-center gap-4">
               {profile.isElite ? (
-                <span className="rounded-full bg-[#00B2FF] px-5 py-2 text-[10px] font-black uppercase tracking-widest text-white shadow-[0_0_20px_rgba(0,178,255,0.3)]">
-                  ✓ ONAYLI
+                <span className="rounded-full border border-[#00B2FF]/50 bg-[#00B2FF]/10 px-5 py-2 text-[10px] font-black uppercase tracking-widest text-[#00B2FF] shadow-[0_0_20px_rgba(0,178,255,0.2)]">
+                  ELITE
                 </span>
               ) : profile.isVerified ? (
-                <span className="rounded-full bg-[#4CAF50] px-5 py-2 text-[10px] font-black uppercase tracking-widest text-white">
-                  ✓ ONAYLI
+                <span className="rounded-full border border-[#4CAF50]/50 bg-[#4CAF50]/10 px-5 py-2 text-[10px] font-black uppercase tracking-widest text-[#4CAF50]">
+                  ONAYLI
                 </span>
               ) : (
-                <span className="rounded-full bg-orange-500 px-5 py-2 text-[10px] font-black uppercase tracking-widest text-white">
-                  ! ONAYSIZ
+                <span className="rounded-full border border-orange-500/50 bg-orange-500/10 px-5 py-2 text-[10px] font-black uppercase tracking-widest text-orange-500">
+                  ONAYSIZ
+                </span>
+              )}
+              {profile.details?.isActive && (
+                <span className="rounded-full border border-green-500/50 bg-green-500/10 px-5 py-2 text-[10px] font-black uppercase tracking-widest text-green-400 animate-pulse">
+                  ● ŞU AN MÜSAİT
                 </span>
               )}
               <span className="ml-auto text-[10px] font-bold text-gray-700 uppercase tracking-widest">
@@ -235,9 +240,10 @@ export default function ProfilePage() {
                   ? 'bg-blue-500/10 border-blue-500/30 text-blue-500'
                   : profile.gender?.toLowerCase() === 'kadın' || profile.gender?.toLowerCase() === 'female'
                   ? 'bg-pink-500/10 border-pink-500/30 text-pink-500'
-                  : 'bg-purple-500/10 border-purple-500/30 text-purple-500'
+                  : 'bg-amber-500/10 border-amber-500/30 text-amber-500'
               }`}>
-                {profile.gender === "Kadın" ? "Kadın ♀️" : profile.gender === "Erkek" ? "Erkek ♂️" : "Çift 👥"}
+                {profile.gender?.toLowerCase() === "kadın" || profile.gender?.toLowerCase() === "female" ? "Kadın ♀️" :
+                 profile.gender?.toLowerCase() === "erkek" || profile.gender?.toLowerCase() === "male" ? "Erkek ♂️" : "Çift 👥"}
               </div>
             </div>
 
