@@ -1,0 +1,47 @@
+rules_version = '2';
+
+service firebase.storage {
+  match /b/{bucket}/o {
+    
+    // Helper functions
+    function isSignedIn() {
+      return request.auth != null;
+    }
+    
+    function isOwner(userId) {
+      return isSignedIn() && request.auth.uid == userId;
+    }
+    
+    // Admin yetkisi (Email bazlı veya Firestore rolü bazlı)
+    // Firestore lookup maliyetli olabilir, bu yüzden en güvenli yol budur.
+    function isAdmin() {
+      return isSignedIn() && request.auth.token.email == '35serinkaratas@gmail.com';
+    }
+
+    // --- MEVCUT KURALLAR ---
+    match /user_photos/{userId}/{allPaths=**} {
+      allow read: if true;
+      allow write: if isOwner(userId)
+        && request.resource.size < 5 * 1024 * 1024
+        && request.resource.contentType.matches('image/.*');
+    }
+
+    match /user_voices/{userId}/{allPaths=**} {
+      allow read: if true;
+      allow write: if isOwner(userId)
+        && request.resource.size < 10 * 1024 * 1024
+        && request.resource.contentType.matches('audio/.*');
+    }
+
+    // --- YENİ EKLENEN KİMLİK DOĞRULAMA KURALLARI ---
+    match /verifications/{userId}/{allPaths=**} {
+      // Sadece sahibi ve admin görebilir. Public read YOK.
+      allow read: if isOwner(userId) || isAdmin();
+      
+      // Sadece sahibi yükleyebilir
+      allow write: if isOwner(userId)
+        && request.resource.size < 10 * 1024 * 1024 // 10MB limit
+        && request.resource.contentType.matches('image/.*');
+    }
+  }
+}
