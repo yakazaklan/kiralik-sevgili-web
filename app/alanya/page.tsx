@@ -15,7 +15,7 @@ export const metadata: Metadata = {
     "Alanya etkinlik arkadaşı",
   ],
   alternates: {
-    canonical: "https://www.kiraliksevgili.com/alanya",
+    canonical: "https://kiralik-sevgili-web.vercel.app/alanya",
   },
 };
 

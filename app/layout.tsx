@@ -30,7 +30,7 @@ export const metadata: Metadata = {
     siteName: "Kiralık Sevgili",
   },
   alternates: {
-    canonical: "https://www.kiraliksevgili.com/",
+    canonical: "https://kiralik-sevgili-web.vercel.app/",
   },
   verification: {
     google: "iDPWL_1NDoz-Bi54EP-8DqDpxKNl2n81F_nP9F7wIDc",
