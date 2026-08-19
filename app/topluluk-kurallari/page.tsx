@@ -1,9 +1,12 @@
 import { Metadata } from "next";
 
 export const metadata: Metadata = {
-  title: "Topluluk Kuralları | Kiralık Sevgili Alanya - Sosyal Etik",
+  title: "Topluluk Kuralları | Kiralık Sevgili",
   description:
-    "Kiralık Sevgili topluluk kuralları. Alanya ve Türkiye genelinde güvenli sosyal arkadaşlık rehberi ve platform etik kuralları.",
+    "Kiralık Sevgili topluluk kuralları. Güvenli sosyal arkadaşlık rehberi ve platform etik kuralları.",
+  alternates: {
+    canonical: "https://kiraliksevgili.net/topluluk-kurallari",
+  },
 };
 
 export default function ToplulukKurallari() {

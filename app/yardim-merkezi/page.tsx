@@ -2,7 +2,10 @@ import { Metadata } from "next";
 
 export const metadata: Metadata = {
   title: "Yardım Merkezi | Kiralık Sevgili",
-  description: "Kiralık Sevgili platformu hakkında sıkça sorulan sorular ve kullanım rehberi.",
+  description: "Kiralık Sevgili platformu hakkında sıkça sorulan sorular, sosyal refakat rehberi ve üyelik süreçleri.",
+  alternates: {
+    canonical: "https://kiraliksevgili.net/yardim-merkezi",
+  },
 };
 
 export default function YardimMerkezi() {

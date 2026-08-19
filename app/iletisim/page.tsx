@@ -1,9 +1,12 @@
 import { Metadata } from "next";
 
 export const metadata: Metadata = {
-  title: "İletişim | Kiralık Sevgili Alanya Destek",
+  title: "İletişim | Kiralık Sevgili Destek Merkezi",
   description:
-    "Kiralık Sevgili platformu ile iletişim kurun. Alanya sosyal arkadaşlık ve refakat hizmetleri için destek merkezi.",
+    "Kiralık Sevgili platformu ile iletişim kurun. Sosyal refakat ve VIP eşlik hizmetleri için resmi destek hattı ve iş birliği kanalları.",
+  alternates: {
+    canonical: "https://kiraliksevgili.net/iletisim",
+  },
 };
 
 export default function Iletisim() {

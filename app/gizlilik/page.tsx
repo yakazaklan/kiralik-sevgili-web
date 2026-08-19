@@ -1,9 +1,12 @@
 import { Metadata } from "next";
 
 export const metadata: Metadata = {
-  title: "Gizlilik Politikası | Kiralık Sevgili Alanya",
+  title: "Gizlilik Politikası | Kiralık Sevgili",
   description:
-    "Kiralık Sevgili platformu gizlilik politikası. Kişisel verilerinizin korunması ve güvenliği hakkında bilgiler. Alanya sosyal arkadaşlık topluluğu.",
+    "Kiralık Sevgili platformu gizlilik politikası. Kişisel verilerinizin korunması ve güvenliği hakkında bilgiler.",
+  alternates: {
+    canonical: "https://kiraliksevgili.net/gizlilik",
+  },
 };
 
 export default function Gizlilik() {

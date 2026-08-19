@@ -24,6 +24,31 @@ export default function Home() {
   const [showAllCities, setShowAllCities] = useState(false);
   const [isLocating, setIsLocating] = useState(false);
 
+  // JSON-LD Structured Data
+  const jsonLd = {
+    "@context": "https://schema.org",
+    "@type": "WebSite",
+    "name": "Kiralık Sevgili",
+    "url": "https://kiraliksevgili.net",
+    "potentialAction": {
+      "@type": "SearchAction",
+      "target": "https://kiraliksevgili.net/?q={search_term_string}",
+      "query-input": "required name=search_term_string"
+    }
+  };
+
+  const organizationLd = {
+    "@context": "https://schema.org",
+    "@type": "Organization",
+    "name": "Kiralık Sevgili",
+    "url": "https://kiraliksevgili.net",
+    "logo": "https://kiraliksevgili.net/logo.png",
+    "sameAs": [
+      "https://twitter.com/kiraliksevgili",
+      "https://instagram.com/kiraliksevgili"
+    ]
+  };
+
   // Otomatik Konum Tespiti
   useEffect(() => {
     const detectLocation = async () => {
@@ -56,6 +81,14 @@ export default function Home() {
 
   return (
     <main className="min-h-screen bg-black text-white selection:bg-pink-500/30">
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
+      />
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(organizationLd) }}
+      />
       <section className="pb-24 pt-12">
         <div className="mx-auto max-w-5xl px-6">
           {/* FİLTRELEME PANELİ */}
@@ -185,20 +218,8 @@ export default function Home() {
               </div>
               <p className="max-w-md text-sm font-medium text-gray-500 leading-relaxed mx-auto md:mx-0">
                 Türkiye'nin en seçkin ve güvenilir sosyal refakat platformu.
-                Alanya ve çevresindeki sosyal etkinlikleriniz için profesyonel eşlik hizmetleri.
+                Etkinlikleriniz, iş yemekleriniz ve sosyal davetleriniz için profesyonel eşlik hizmetleri.
               </p>
-              <div className="mt-8 p-6 rounded-3xl bg-[#0a0a0a] border border-[#1a1a1a] inline-block text-left max-w-lg">
-                <p className="text-[10px] font-bold text-[#ff2d55] uppercase tracking-widest mb-2">
-                  Yasal Bilgilendirme ve SEO Kapsamı
-                </p>
-                <p className="text-[9px] text-gray-600 uppercase font-medium leading-relaxed">
-                  Platformumuz kesinlikle bir <strong>Alanya eskort</strong> sitesi değildir.
-                  İçeriklerimizde <strong>eskort Alanya</strong> veya benzeri hizmetlerin tanıtımı yapılmaz.
-                  Kiralık Sevgili, sadece sosyal refakatçi ve VİP eşlik hizmetleri sunan üyelerin profillerini barındırır.
-                  <strong>Alanya eskort ilanları</strong> arayan kullanıcıların topluluk kurallarımıza uyması zorunludur.
-                  Biz sadece elit ve seviyeli sosyal buluşmaları destekleyen bir teknoloji sağlayıcısıyız.
-                </p>
-              </div>
             </div>
 
             <div>

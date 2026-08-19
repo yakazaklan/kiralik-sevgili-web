@@ -1,9 +1,12 @@
 import { Metadata } from "next";
 
 export const metadata: Metadata = {
-  title: "Kullanım Şartları | Kiralık Sevgili Alanya - Sosyal Refakat",
+  title: "Kullanım Şartları | Kiralık Sevgili",
   description:
-    "Kiralık Sevgili platformu kullanım şartları. Alanya sosyal arkadaşlık kuralları, güvenlik politikaları ve yasal uyarılar.",
+    "Kiralık Sevgili platformu kullanım şartları. Sosyal refakat kuralları, güvenlik politikaları ve yasal uyarılar.",
+  alternates: {
+    canonical: "https://kiraliksevgili.net/kullanim-sartlari",
+  },
 };
 
 export default function KullanimSartlari() {

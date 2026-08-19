@@ -3,40 +3,60 @@ import "./globals.css";
 import Header from "./components/Header";
 
 export const metadata: Metadata = {
-  title: "Kiralık Sevgili | Alanya & Türkiye Sosyal Arkadaşlık ve Refakat Platformu",
+  metadataBase: new URL("https://kiraliksevgili.net"),
+  title: {
+    default: "Kiralık Sevgili | Sosyal Refakat ve Arkadaşlık Platformu",
+    template: "%s | Kiralık Sevgili",
+  },
   description:
-    "Türkiye'nin ve Alanya'nın en prestijli sosyal arkadaşlık platformu. Kiralık Sevgili, kesinlikle eskort sitesi değildir. Alanya sosyal refakat ve etkinlik arkadaşlığı için doğru yerdesiniz.",
+    "Türkiye genelinde sosyal etkinlikler, geziler, yemek, kahve ve günlük aktiviteler için güvenilir sosyal refakat ve arkadaşlık platformu. Alanya ve diğer şehirlerde ilanları keşfedin.",
   keywords: [
     "Kiralık Sevgili",
+    "sosyal arkadaşlık",
+    "sosyal refakat",
+    "etkinlik arkadaşı",
     "Alanya sosyal arkadaşlık",
-    "Alanya refakat",
-    "sosyal arkadaş bulma",
-    "Türkiye sosyal arkadaşlık",
-    "Alanya etkinlik arkadaşı",
-    "Alanya kiralık sevgili",
-    "Alanya eskort sayfası değildir",
+    "Türkiye arkadaşlık platformu",
+    "VIP refakat",
+    "birlikte zaman geçirme",
   ],
   authors: [{ name: "Kiralık Sevgili" }],
+  creator: "Kiralık Sevgili",
+  publisher: "Kiralık Sevgili",
   robots: {
     index: true,
     follow: true,
+    googleBot: {
+      index: true,
+      follow: true,
+      "max-video-preview": -1,
+      "max-image-preview": "large",
+      "max-snippet": -1,
+    },
   },
   openGraph: {
-    title: "Kiralık Sevgili | Alanya & Türkiye Sosyal Arkadaşlık",
+    title: "Kiralık Sevgili | Sosyal Refakat ve Arkadaşlık Platformu",
     description:
-      "Alanya ve Türkiye genelinde sosyal arkadaşlık kur. Kiralık Sevgili bir eskort platformu değildir, sosyal etkinlik arkadaşlığı sunar.",
-    type: "website",
-    locale: "tr_TR",
+      "Türkiye'nin güvenilir sosyal refakat ve arkadaşlık platformu. Alanya ve tüm illerdeki sosyal etkinlik arkadaşı ilanlarını keşfedin.",
+    url: "https://kiraliksevgili.net",
     siteName: "Kiralık Sevgili",
+    locale: "tr_TR",
+    type: "website",
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "Kiralık Sevgili | Sosyal Refakat ve Arkadaşlık Platformu",
+    description: "Türkiye genelinde sosyal etkinlikler ve günlük aktiviteler için güvenilir sosyal refakat platformu.",
   },
   alternates: {
-    canonical: "https://kiralik-sevgili-web.vercel.app/",
+    canonical: "https://kiraliksevgili.net",
+  },
+  icons: {
+    icon: "/favicon.ico",
+    apple: "/apple-touch-icon.png",
   },
   verification: {
     google: "iDPWL_1NDoz-Bi54EP-8DqDpxKNl2n81F_nP9F7wIDc",
-  },
-  other: {
-    "google-site-verification": "iDPWL_1NDoz-Bi54EP-8DqDpxKNl2n81F_nP9F7wIDc",
   },
 };
 
@@ -47,9 +67,6 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="tr">
-      <head>
-        <meta name="google-site-verification" content="iDPWL_1NDoz-Bi54EP-8DqDpxKNl2n81F_nP9F7wIDc" />
-      </head>
       <body className="antialiased bg-black text-white">
         <Header />
         {children}

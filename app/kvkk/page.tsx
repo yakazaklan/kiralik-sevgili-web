@@ -1,9 +1,12 @@
 import { Metadata } from "next";
 
 export const metadata: Metadata = {
-  title: "KVKK Aydınlatma Metni | Kiralık Sevgili Alanya",
+  title: "KVKK Aydınlatma Metni | Kiralık Sevgili",
   description:
     "Kiralık Sevgili Kişisel Verilerin Korunması Kanunu (KVKK) aydınlatma metni. Verilerinizin nasıl işlendiği ve haklarınız hakkında detaylı bilgi.",
+  alternates: {
+    canonical: "https://kiraliksevgili.net/kvkk",
+  },
 };
 
 export default function KVKK() {

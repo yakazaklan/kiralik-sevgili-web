@@ -2,7 +2,10 @@ import { Metadata } from "next";
 
 export const metadata: Metadata = {
   title: "Şikayet Bildir | Kiralık Sevgili",
-  description: "Platform kurallarına uymayan kullanıcıları bildirin.",
+  description: "Platform kurallarına uymayan kullanıcıları bildirin. Güvenli sosyal refakat deneyimi için bildirim merkezi.",
+  alternates: {
+    canonical: "https://kiraliksevgili.net/sikayet-bildir",
+  },
 };
 
 export default function SikayetBildir() {
