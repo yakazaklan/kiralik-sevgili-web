@@ -12,7 +12,14 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const resolvedParams = await params;
   const city = resolvedParams.city;
   const cityData = getCityBySlug(city);
-  const cityName = cityData ? cityData.name : city.charAt(0).toUpperCase() + city.slice(1);
+
+  if (!cityData) {
+    return {
+      title: "Sayfa Bulunamadı",
+    };
+  }
+
+  const cityName = cityData.name;
 
   const title = cityData?.seoTitle || `${cityName} Kiralık Sevgili | Sosyal Arkadaşlık & Birlikte Zaman Geçirme`;
   const description = cityData?.seoDescription || `${cityName}'da sosyal arkadaşlık, birlikte zaman geçirme ve etkinlik eşliği için elit ilanlar. ${cityName} sosyal refakat ve VIP eşlik platformu.`;
@@ -32,15 +39,18 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   };
 }
 
+export const dynamicParams = false;
+
 export default async function CityPage({ params }: Props) {
   const resolvedParams = await params;
   const city = resolvedParams.city;
   const cityData = getCityBySlug(city);
 
-  // Eğer şehir listemizde yoksa ve çok alakasız bir slug ise 404 dönebiliriz
-  // veya genel bir şablonla devam edebiliriz. Şimdilik sadece listedekileri veya
-  // düzgün formatlıları kabul edelim.
-  const cityName = cityData ? cityData.name : city.charAt(0).toUpperCase() + city.slice(1);
+  if (!cityData) {
+    notFound();
+  }
+
+  const cityName = cityData.name;
 
   return (
     <main className="min-h-screen bg-black text-white selection:bg-pink-500/30">

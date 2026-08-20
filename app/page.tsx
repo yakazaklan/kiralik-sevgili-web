@@ -59,13 +59,23 @@ export default function Home() {
             // Ücretsiz bir reverse geocoding API'si kullanarak şehri buluyoruz
             const res = await fetch(`https://nominatim.openstreetmap.org/reverse?lat=${position.coords.latitude}&lon=${position.coords.longitude}&format=json`);
             const data = await res.json();
-            const city = data.address.province || data.address.city || data.address.state;
 
-            if (city) {
-              // Bulunan şehri bizim listemizdeki formatla eşleştiriyoruz
-              const matchedCity = ALL_CITIES.find(c => city.toLowerCase().includes(c.toLowerCase()));
-              if (matchedCity) {
-                setCityFilter(matchedCity);
+            // Alanya Özel Kontrolü: Town veya District alanlarında Alanya var mı bak
+            const isAlanya =
+              data.address.town?.toLowerCase().includes("alanya") ||
+              data.address.district?.toLowerCase().includes("alanya") ||
+              data.address.suburb?.toLowerCase().includes("alanya");
+
+            if (isAlanya) {
+              setCityFilter("Alanya");
+            } else {
+              const city = data.address.province || data.address.city || data.address.state;
+              if (city) {
+                // Bulunan şehri bizim listemizdeki formatla eşleştiriyoruz
+                const matchedCity = ALL_CITIES.find(c => city.toLowerCase().includes(c.toLowerCase()));
+                if (matchedCity) {
+                  setCityFilter(matchedCity);
+                }
               }
             }
           } catch (e) {
@@ -91,6 +101,9 @@ export default function Home() {
       />
       <section className="pb-24 pt-12">
         <div className="mx-auto max-w-5xl px-6">
+          {/* SEO H1 BAŞLIĞI */}
+          <h1 className="sr-only">Kiralık Sevgili | Türkiye Geneli Sosyal Arkadaşlık ve Refakat Platformu</h1>
+
           {/* FİLTRELEME PANELİ */}
           <div className="mb-12 space-y-8">
             <div className="flex flex-col items-center justify-between gap-6 md:flex-row">
