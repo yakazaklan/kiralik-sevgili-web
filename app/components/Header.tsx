@@ -1,15 +1,44 @@
 "use client";
 
-import React from "react";
+import React, { useState, useEffect } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import { auth } from "@/lib/firebase";
+import { GoogleAuthProvider, signInWithPopup, signOut, onAuthStateChanged, User } from "firebase/auth";
 
 export default function Header() {
   const pathname = usePathname();
+  const [user, setUser] = useState<User | null>(null);
+
+  useEffect(() => {
+    const unsubscribe = onAuthStateChanged(auth, (currentUser) => {
+      setUser(currentUser);
+    });
+    return () => unsubscribe();
+  }, []);
+
+  const handleLogin = async () => {
+    try {
+      const provider = new GoogleAuthProvider();
+      await signInWithPopup(auth, provider);
+    } catch (error: any) {
+      console.error("Login Error Detail:", error);
+      if (error.code === 'auth/unauthorized-domain') {
+        alert("Hata: Bu alan adı Firebase panelinde yetkilendirilmemiş.");
+      } else {
+        alert(`Giriş hatası: ${error.message}`);
+      }
+    }
+  };
+
+  const handleLogout = async () => {
+    await signOut(auth);
+  };
 
   const navItems = [
     { name: "Keşfet", path: "/", icon: "🔍" },
     { name: "Harita", path: "/harita", icon: "📍" },
+    { name: "Topluluk", path: "/topluluk", icon: "🏘️" },
     { name: "Mesajlar", path: "/mesajlar", icon: "💬" },
     { name: "Profil", path: "/profil", icon: "👤" },
   ];
@@ -27,20 +56,45 @@ export default function Header() {
             </h1>
           </Link>
 
-          {/* WARNING MESSAGE */}
-          <div className="hidden md:flex absolute left-1/2 -translate-x-1/2 items-center">
-             <span className="text-[11px] font-black text-[#ff2d55] uppercase tracking-[0.15em] bg-[#ff2d55]/10 px-6 py-2.5 rounded-full border border-[#ff2d55]/20 animate-pulse whitespace-nowrap shadow-[0_0_20px_-5px_rgba(255,45,85,0.4)]">
-               ⚠️ Bu bir eskort sayfası değildir. Sadece sosyal refakat hizmeti verilir.
+          {/* WARNING MESSAGE - DESKTOP ONLY */}
+          <div className="hidden lg:flex absolute left-1/2 -translate-x-1/2 items-center">
+             <span className="text-[10px] font-black text-[#ff2d55] uppercase tracking-[0.15em] bg-[#ff2d55]/10 px-4 py-2 rounded-full border border-[#ff2d55]/20 whitespace-nowrap">
+               ⚠️ SOSYAL REFAKAT PLATFORMUDUR
              </span>
           </div>
 
-          <button className="rounded-full bg-white px-6 py-2 text-[10px] font-black uppercase tracking-widest text-black transition hover:bg-[#ff2d55] hover:text-white active:scale-95 shrink-0 ml-4">
-            Giriş Yap
-          </button>
+          <div className="flex items-center gap-2 md:gap-4">
+            {/* ANDROID DOWNLOAD BUTTON - ALWAYS VISIBLE */}
+            <a
+              href="https://play.google.com/store/apps/details?id=com.kiraliksevgili.kiralik_sevgili"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="flex items-center gap-2 rounded-full bg-gradient-to-r from-[#34a853] to-[#4285f4] px-3 py-2 text-[9px] font-black uppercase tracking-tighter text-white transition hover:scale-105 active:scale-95 shadow-lg shadow-blue-500/20"
+            >
+              <span>🤖</span> <span className="hidden sm:inline">UYGULAMAYI</span> İNDİR
+            </a>
+
+            {user ? (
+              <div className="flex items-center gap-2">
+                <img src={user.photoURL || ""} alt="Profil" className="w-8 h-8 rounded-full border border-[#ff2d55]" />
+                <button
+                  onClick={handleLogout}
+                  className="rounded-full bg-[#1a1a1a] px-3 py-2 text-[9px] font-black uppercase text-white transition hover:bg-red-500"
+                >
+                  Çıkış
+                </button>
+              </div>
+            ) : (
+              <button
+                onClick={handleLogin}
+                className="rounded-full bg-white px-4 py-2 text-[9px] font-black uppercase text-black transition hover:bg-[#ff2d55] hover:text-white"
+              >
+                Giriş
+              </button>
+            )}
+          </div>
         </div>
 
-
-        {/* APP-LIKE NAVIGATION */}
         <nav className="flex items-center justify-around border-t border-[#1a1a1a] pt-4 md:justify-center md:gap-16">
           {navItems.map((item) => {
             const isActive = pathname === item.path;

@@ -58,13 +58,17 @@ export const cities: CityInfo[] = [
   {
     name: "Alanya",
     slug: "alanya",
-    seoTitle: "Alanya Tatil Arkadaşlığı | Kleopatra Plajı ve Kale Manzaralı Eşlik",
-    seoDescription: "Alanya tatilinizi unutulmaz kılacak, gündüz plajda gece ise kalede size eşlik edecek vizyoner sosyal partner ilanları.",
-    activities: ["Alanya Kalesi'nde manzara keyfi", "Kleopatra Plajı'nda güneşlenme", "Dim Çayı'nda serin bir gün", "Alanya Limanı'nda akşam yürüyüşü"],
-    socialSpots: ["Damlataş Caddesi", "Alanya Yat Limanı", "Mahmutlar Sahil"],
-    description: "Alanya'da birlikte zaman geçirmek, sosyal aktivitelere katılmak ve yeni insanlarla tanışmak için KiralıkSevgili.net profillerini keşfedin.",
-    usageLogic: "Alanya'da yaz kış demeden sosyal kalmak isteyenler için özel olarak kurgulanmış bir deneyim.",
-    faqs: [{ q: "Alanya'da etkinlik arkadaşı bulabilir miyim?", a: "Tabii ki, özellikle tekne turları ve gece etkinlikleri için Alanya'da birçok aktif kullanıcımız bulunmaktadır." }]
+    seoTitle: "Alanya Eskort & Sosyal Refakat Hizmetleri | VIP Partner ve Eşlik",
+    seoDescription: "Alanya'da dışarıda görüşebileceğiniz, birlikte vakit geçirebileceğiniz elit kadın ve erkek sosyal partnerleri keşfedin. Alanya eskort ve sosyal refakat ilanları.",
+    activities: ["Alanya Kalesi'nde akşam yemeği partneri", "Kleopatra Plajı'nda gün batımı eşliği", "Yat turlarında VIP sosyal refakat", "Dim Çayı'nda doğa gezisi partnerliği"],
+    socialSpots: ["Damlataş Caddesi", "Alanya Yat Limanı", "Mahmutlar Sahil", "İskele Caddesi"],
+    description: "Alanya'nın dinamik sosyal hayatında size eşlik edecek, vizyon sahibi ve güvenilir sosyal partnerlerle tanışın. Alanya'da sosyal refakatçi arayanlar için en elit platform.",
+    usageLogic: "Alanya'da sosyal çevrenizi genişletmek, bilmediğiniz mekanları bir eşlikçiyle keşfetmek veya özel davetlerinize partner bulmak için KiralıkSevgili.net en güvenilir adrestir. Hizmetimiz tamamen yasal sınırlar içerisinde, sadece sosyal refakat ve arkadaşlık üzerinedir.",
+    faqs: [
+      { q: "Alanya sosyal refakatçi ne yapar?", a: "Sizinle akşam yemeğine çıkar, etkinliklere katılır, Alanya seyahatinizde size sosyal bir partner olarak eşlik eder ve kaliteli vakit geçirmenizi sağlar." },
+      { q: "Platformda güvenlik nasıl sağlanır?", a: "Tüm profiller kimlik onayı (isVerified) ve yönetici onayı (isApproved) süreçlerinden geçer. Bu sayede sadece gerçek kullanıcılarla bağlantı kurarsınız." },
+      { q: "Alanya eskort hizmeti ile farkı nedir?", a: "Platformumuz sadece yasal sosyal eşlik hizmeti sunar. Cinsel hizmet veya yasal olmayan faaliyetler kesinlikle yasaktır ve barındırılmaz." }
+    ]
   },
   {
     name: "Bursa",
@@ -918,6 +922,12 @@ export const cities: CityInfo[] = [
 export function getCityBySlug(slug: string): CityInfo | undefined {
   if (!slug) return undefined;
   return cities.find(c => c.slug === slug.toLowerCase());
+}
+
+export function getCitySlugByName(name: string): string | undefined {
+  if (!name) return undefined;
+  const normalized = name.trim().toLocaleLowerCase("tr-TR");
+  return cities.find((c) => c.name.toLocaleLowerCase("tr-TR") === normalized)?.slug;
 }
 
 export function generateCityName(slug: string): string {

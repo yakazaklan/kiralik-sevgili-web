@@ -1,19 +1,21 @@
-import { initializeApp } from "firebase/app";
+import { initializeApp, getApps } from "firebase/app";
 import { getFirestore } from "firebase/firestore";
 import { getStorage } from "firebase/storage";
 import { getAuth } from "firebase/auth";
 
 const firebaseConfig = {
-  projectId: "kiralik-sevgili",
-  appId: "1:347319227483:web:a18c5cf4604280b2071b7e",
-  storageBucket: "kiralik-sevgili.firebasestorage.app",
-  apiKey: "AIzaSyChM5V1Y9Rd80fSk4cm2LKRg5mpXEMMaKE",
-  authDomain: "kiralik-sevgili.firebaseapp.com",
-  messagingSenderId: "347319227483",
-  measurementId: "G-EF95QEVZF6",
+  apiKey: process.env.NEXT_PUBLIC_FIREBASE_API_KEY || "AIzaSyChM5V1Y9Rd80fSk4cm2LKRg5mpXEMMaKE",
+  authDomain:
+    process.env.NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN || "kiralik-sevgili.firebaseapp.com",
+  projectId: process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID || "kiralik-sevgili",
+  storageBucket:
+    process.env.NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET || "kiralik-sevgili.firebasestorage.app",
+  messagingSenderId: process.env.NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID || "347319227483",
+  appId: process.env.NEXT_PUBLIC_FIREBASE_APP_ID || "1:347319227483:web:a18c5cf4604280b2071b7e",
+  measurementId: process.env.NEXT_PUBLIC_FIREBASE_MEASUREMENT_ID || "G-EF95QEVZF6",
 };
 
-const app = initializeApp(firebaseConfig);
+const app = getApps().length ? getApps()[0] : initializeApp(firebaseConfig);
 
 export const db = getFirestore(app);
 export const storage = getStorage(app);

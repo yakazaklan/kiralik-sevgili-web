@@ -1,46 +1,59 @@
 import type { MetadataRoute } from "next";
 import { cities } from "./utils/cityData";
+import { SITE_URL, absoluteUrl } from "@/lib/site";
+
+export const dynamic = "force-static";
 
 export default function sitemap(): MetadataRoute.Sitemap {
-  const baseUrl = "https://kiraliksevgili.net";
-
   const cityRoutes = cities.map((city) => ({
-    url: `${baseUrl}/${city.slug}`,
+    url: absoluteUrl(`/${city.slug}`),
     lastModified: new Date(),
     changeFrequency: "weekly" as const,
     priority: 0.8,
   }));
 
-  const staticRoutes = [
+  const staticRoutes: MetadataRoute.Sitemap = [
     {
-      url: baseUrl,
+      url: SITE_URL,
       lastModified: new Date(),
-      changeFrequency: "weekly" as const,
+      changeFrequency: "weekly",
       priority: 1,
     },
     {
-      url: `${baseUrl}/kullanim-sartlari`,
+      url: absoluteUrl("/kullanim-sartlari"),
       lastModified: new Date(),
-      changeFrequency: "monthly" as const,
+      changeFrequency: "monthly",
       priority: 0.5,
     },
     {
-      url: `${baseUrl}/gizlilik`,
+      url: absoluteUrl("/gizlilik"),
       lastModified: new Date(),
-      changeFrequency: "monthly" as const,
+      changeFrequency: "monthly",
       priority: 0.5,
     },
     {
-      url: `${baseUrl}/iletisim`,
+      url: absoluteUrl("/iletisim"),
       lastModified: new Date(),
-      changeFrequency: "monthly" as const,
+      changeFrequency: "monthly",
       priority: 0.5,
     },
     {
-      url: `${baseUrl}/topluluk-kurallari`,
+      url: absoluteUrl("/topluluk-kurallari"),
       lastModified: new Date(),
-      changeFrequency: "monthly" as const,
+      changeFrequency: "monthly",
       priority: 0.5,
+    },
+    {
+      url: absoluteUrl("/kvkk"),
+      lastModified: new Date(),
+      changeFrequency: "monthly",
+      priority: 0.4,
+    },
+    {
+      url: absoluteUrl("/yardim-merkezi"),
+      lastModified: new Date(),
+      changeFrequency: "monthly",
+      priority: 0.4,
     },
   ];
 

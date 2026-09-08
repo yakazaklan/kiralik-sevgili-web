@@ -1,22 +1,17 @@
 {
-  "firestore": {
-    "database": "(default)",
-    "location": "nam5",
-    "rules": "firestore.rules",
-    "indexes": "firestore.indexes.json"
-  },
-  "apphosting": {
-    "backendId": "kiralik-sevgili-web",
-    "rootDir": "/",
+  "hosting": {
+    "site": "kiralik-sevgili",
+    "public": "out",
+    "cleanUrls": true,
+    "trailingSlash": false,
     "ignore": [
-      "node_modules",
-      ".git",
-      "firebase-debug.log",
-      "firebase-debug.*.log",
-      "functions"
+      "firebase.json",
+      "**/.*",
+      "**/node_modules/**"
     ]
   },
-  "storage": {
-    "rules": "storage.rules"
+  "firestore": {
+    "rules": "firestore.rules",
+    "indexes": "firestore.indexes.json"
   }
 }

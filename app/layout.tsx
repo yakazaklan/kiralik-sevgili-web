@@ -1,9 +1,10 @@
 import type { Metadata } from "next";
 import "./globals.css";
 import Header from "./components/Header";
+import { SITE_URL } from "@/lib/site";
 
 export const metadata: Metadata = {
-  metadataBase: new URL("https://kiraliksevgili.net"),
+  metadataBase: new URL(SITE_URL),
   title: {
     default: "Kiralık Sevgili | Sosyal Refakat ve Arkadaşlık Platformu",
     template: "%s | Kiralık Sevgili",
@@ -38,7 +39,6 @@ export const metadata: Metadata = {
     title: "Kiralık Sevgili | Sosyal Refakat ve Arkadaşlık Platformu",
     description:
       "Türkiye'nin güvenilir sosyal refakat ve arkadaşlık platformu. Alanya ve tüm illerdeki sosyal etkinlik arkadaşı ilanlarını keşfedin.",
-    url: "https://kiraliksevgili.net",
     siteName: "Kiralık Sevgili",
     locale: "tr_TR",
     type: "website",
@@ -47,9 +47,6 @@ export const metadata: Metadata = {
     card: "summary_large_image",
     title: "Kiralık Sevgili | Sosyal Refakat ve Arkadaşlık Platformu",
     description: "Türkiye genelinde sosyal etkinlikler ve günlük aktiviteler için güvenilir sosyal refakat platformu.",
-  },
-  alternates: {
-    canonical: "https://kiraliksevgili.net",
   },
   icons: {
     icon: "/favicon.ico",
