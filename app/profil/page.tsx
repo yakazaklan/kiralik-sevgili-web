@@ -113,11 +113,11 @@ export default function ProfilPage() {
           <p className="text-xs text-gray-500 font-medium leading-relaxed">Gelen mesaj isteklerini kontrol edin.</p>
         </Link>
 
-        <div className="p-8 rounded-[2.5rem] bg-[#0a0a0a] border border-[#1a1a1a] opacity-50 cursor-not-allowed">
-          <div className="w-12 h-12 bg-gray-500/10 rounded-2xl flex items-center justify-center text-2xl mb-6">⚙️</div>
+        <Link href="/profil/duzenle" className="p-8 rounded-[2.5rem] bg-[#0a0a0a] border border-[#1a1a1a] hover:border-[#ff2d55]/30 transition-all group">
+          <div className="w-12 h-12 bg-gray-500/10 rounded-2xl flex items-center justify-center text-2xl mb-6 group-hover:scale-110 transition-transform">⚙️</div>
           <h3 className="text-lg font-black text-white uppercase tracking-tighter mb-2">AYARLAR</h3>
-          <p className="text-xs text-gray-500 font-medium leading-relaxed">Gizlilik ve hesap ayarları (Yakında).</p>
-        </div>
+          <p className="text-xs text-gray-500 font-medium leading-relaxed">Profil ve WhatsApp iletişim ayarlarını düzenleyin.</p>
+        </Link>
 
         <button onClick={handleLogout} className="p-8 rounded-[2.5rem] bg-[#0a0a0a] border border-[#1a1a1a] hover:border-red-500/30 transition-all group text-left">
           <div className="w-12 h-12 bg-red-500/10 rounded-2xl flex items-center justify-center text-2xl mb-6 group-hover:scale-110 transition-transform">🚪</div>

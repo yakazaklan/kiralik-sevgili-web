@@ -101,15 +101,53 @@ export default function HaritaPage() {
         </div>
       )}
 
-      {/* Mobile CTA */}
-      <div className="mt-20 p-10 rounded-[3rem] bg-gradient-to-br from-[#111] to-black border border-[#1a1a1a] text-center">
-        <h3 className="text-xl font-black text-white uppercase tracking-tighter mb-4">Interaktif Harita Deneyimi</h3>
-        <p className="text-sm text-gray-400 mb-8 max-w-md mx-auto">
-          Anlık konum takibi ve tam interaktif harita deneyimi için Kiralık Sevgili mobil uygulamasını kullanın.
-        </p>
-        <div className="flex flex-wrap justify-center gap-4">
-          <div className="px-8 py-3 bg-white text-black rounded-2xl font-black text-xs uppercase tracking-widest cursor-not-allowed opacity-50">App Store</div>
-          <div className="px-8 py-3 bg-white text-black rounded-2xl font-black text-xs uppercase tracking-widest cursor-not-allowed opacity-50">Google Play</div>
+      {/* Mobile CTA - PREMIUM DOWNLOAD SECTION */}
+      <div className="mt-20 p-8 md:p-12 rounded-[3rem] bg-[#0a0a0a] border border-white/5 text-center shadow-2xl relative overflow-hidden group">
+        {/* Background Glow */}
+        <div className="absolute inset-0 bg-gradient-to-br from-[#ff2d55]/5 to-transparent opacity-50"></div>
+
+        <div className="relative z-10">
+          <h3 className="text-2xl md:text-3xl font-black text-white uppercase tracking-tighter mb-4">Interaktif Harita Deneyimi</h3>
+          <p className="text-sm md:text-base text-gray-400 mb-10 max-w-md mx-auto leading-relaxed">
+            Anlık konum takibi ve tam interaktif harita deneyimi için Kiralık Sevgili mobil uygulamasını kullanın.
+          </p>
+
+          <div className="flex flex-col sm:flex-row items-center justify-center gap-6">
+            {/* Google Play Button */}
+            <a
+              href="https://play.google.com/store/apps/details?id=com.kiraliksevgili.kiralik_sevgili"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="group/btn relative flex items-center gap-4 rounded-2xl bg-black border border-white/10 p-3 pr-8 transition-all hover:border-[#ff2d55]/50 hover:bg-[#050505] hover:scale-105 active:scale-95 w-full sm:w-auto"
+            >
+              <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-gradient-to-br from-[#34a853] to-[#4285f4] text-2xl shadow-lg ring-2 ring-black">
+                🤖
+              </div>
+              <div className="text-left">
+                <p className="text-[8px] font-black tracking-widest text-[#34a853] uppercase">ANDROID</p>
+                <p className="text-base font-black text-white uppercase tracking-tighter">Google Play</p>
+              </div>
+            </a>
+
+            {/* App Store Button (Coming Soon) */}
+            <a
+              href="#"
+              onClick={(e) => e.preventDefault()}
+              className="group/btn relative flex items-center gap-4 rounded-2xl bg-black border border-white/10 p-3 pr-8 opacity-40 cursor-not-allowed transition-all w-full sm:w-auto"
+            >
+              <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-gradient-to-br from-[#555] to-[#222] text-2xl shadow-lg ring-2 ring-black">
+                🍎
+              </div>
+              <div className="text-left">
+                <p className="text-[8px] font-black tracking-widest text-gray-500 uppercase">YAKINDA</p>
+                <p className="text-base font-black text-white uppercase tracking-tighter">App Store</p>
+              </div>
+            </a>
+          </div>
+
+          <p className="mt-8 text-[9px] font-black text-gray-600 uppercase tracking-[0.3em]">
+            Güvenli • Yasal • Seçkin Sosyal Refakat
+          </p>
         </div>
       </div>
     </div>

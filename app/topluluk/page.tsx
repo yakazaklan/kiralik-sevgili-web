@@ -50,7 +50,6 @@ function PostCard({ post }: { post: Post }) {
         timestamp: serverTimestamp(),
         resolved: false,
       });
-      });
       alert("Şikayetiniz yöneticiye iletildi.");
       setShowReportMenu(false);
     } catch (error) {

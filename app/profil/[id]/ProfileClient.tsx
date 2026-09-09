@@ -23,6 +23,8 @@ type Profile = {
   isApproved: boolean;
   isElite: boolean;
   meetingCount: number;
+  whatsappNumber?: string;
+  whatsappContactEnabled?: boolean;
   prices: {
     hourly?: string;
     daily?: string;
@@ -73,7 +75,6 @@ export default function ProfileClient() {
         status: 'pending',
         timestamp: serverTimestamp(),
         resolved: false,
-      });
       });
       alert("Şikayetiniz yöneticiye iletildi.");
       setShowReportMenu(false);
@@ -151,6 +152,8 @@ export default function ProfileClient() {
           isApproved,
           isElite,
           meetingCount,
+          whatsappNumber: data.whatsappNumber,
+          whatsappContactEnabled: data.whatsappContactEnabled === true,
           prices: {
             hourly: data.price || data.hourlyPrice || data.saatlikFiyat,
             daily: data.priceDaily || data.dailyPrice || data.gunlukFiyat,
@@ -303,7 +306,7 @@ export default function ProfileClient() {
 
       {/* Main Content */}
       <div className="mx-auto max-w-2xl">
-        {/* Photo Gallery */}
+        {/* Photo Gallery - RESTRICTED ON WEB */}
         <div className="grid grid-cols-1 gap-1">
           {profile.photos.length > 0 ? (
             <div className="aspect-[4/5] relative overflow-hidden">
@@ -314,11 +317,24 @@ export default function ProfileClient() {
           )}
 
           <div className="grid grid-cols-3 gap-1 mt-1">
-             {profile.photos.slice(1).map((p, i) => (
+             {profile.photos.slice(1, 3).map((p, i) => (
                <div key={i} className="aspect-square overflow-hidden bg-[#111]">
                  <img src={p} className="w-full h-full object-cover" alt="" />
                </div>
              ))}
+             {profile.photos.length > 3 && (
+               <a
+                 href="https://play.google.com/store/apps/details?id=com.kiraliksevgili.kiralik_sevgili"
+                 target="_blank"
+                 rel="noopener noreferrer"
+                 className="aspect-square bg-gradient-to-br from-[#1a1a1a] to-black flex flex-col items-center justify-center text-center p-2 border border-[#ff2d55]/20 hover:border-[#ff2d55]/50 transition-all group"
+               >
+                 <span className="text-xl mb-1 group-hover:scale-110 transition-transform">📸</span>
+                 <span className="text-[8px] font-black text-[#ff2d55] uppercase tracking-widest leading-tight">
+                   Tüm Fotoğrafları Uygulamada Gör
+                 </span>
+               </a>
+             )}
           </div>
         </div>
 
@@ -343,7 +359,7 @@ export default function ProfileClient() {
 
           {/* Action Buttons */}
           {!isOwner && (
-            <div className="grid grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               {requestStatus === "none" ? (
                 <button
                   onClick={handleConnect}
@@ -365,18 +381,32 @@ export default function ProfileClient() {
                 </button>
               )}
 
-              <button
-                className="bg-[#111] text-white font-black py-4 rounded-2xl border border-white/5 hover:bg-[#1a1a1a] transition-all"
-                onClick={() => {
-                  if (requestStatus === "accepted") {
-                     router.push(`/chat/${[currentUser?.uid, id].sort().join("_")}`);
-                  } else {
-                     alert("Mesaj yazabilmek için önce bağlantı kurmanız gerekmektedir.");
-                  }
-                }}
-              >
-                MESAJ YAZ
-              </button>
+              {profile.whatsappContactEnabled && profile.whatsappNumber ? (
+                <a
+                  href={`https://wa.me/${profile.whatsappNumber.replace(/[^0-9]/g, '')}`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="bg-[#25D366] text-white font-black py-4 rounded-2xl hover:bg-[#25D366]/90 transition-all flex items-center justify-center gap-2"
+                >
+                  <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">
+                    <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L0 24l6.335-1.662c1.72.938 3.659 1.435 5.632 1.436h.008c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413Z"/>
+                  </svg>
+                  WHATSAPP'TAN YAZ
+                </a>
+              ) : (
+                <button
+                  className="bg-[#111] text-white font-black py-4 rounded-2xl border border-white/5 hover:bg-[#1a1a1a] transition-all"
+                  onClick={() => {
+                    if (requestStatus === "accepted") {
+                      router.push(`/chat/${[currentUser?.uid, id].sort().join("_")}`);
+                    } else {
+                      alert("Mesaj yazabilmek için önce bağlantı kurmanız gerekmektedir.");
+                    }
+                  }}
+                >
+                  MESAJ YAZ
+                </button>
+              )}
             </div>
           )}
 
@@ -409,7 +439,10 @@ export default function ProfileClient() {
 
           {/* Prices Detail */}
           <div className="space-y-4">
-             <h3 className="text-sm font-black text-gray-500 uppercase tracking-widest">Ücretlendirme</h3>
+             <div className="flex items-center justify-between">
+               <h3 className="text-sm font-black text-gray-500 uppercase tracking-widest">Ücretlendirme</h3>
+               <span className="text-[9px] font-black text-[#ff2d55] animate-pulse">MOBİL ÖDEME AKTİF</span>
+             </div>
              <div className="grid grid-cols-1 gap-2">
                 <div className="flex justify-between p-4 bg-[#0a0a0a] rounded-2xl border border-white/5">
                    <span className="text-gray-400">Saatlik Eşlik</span>
@@ -419,10 +452,16 @@ export default function ProfileClient() {
                    <span className="text-gray-400">Günlük Eşlik</span>
                    <span className="font-bold">₺{profile.prices.daily || "Görüşülür"}</span>
                 </div>
-                <div className="flex justify-between p-4 bg-[#0a0a0a] rounded-2xl border border-white/5">
-                   <span className="text-gray-400">Haftalık Eşlik</span>
-                   <span className="font-bold">₺{profile.prices.weekly || "Görüşülür"}</span>
-                </div>
+                {/* Restricted on Web */}
+                <a
+                  href="https://play.google.com/store/apps/details?id=com.kiraliksevgili.kiralik_sevgili"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="flex justify-between p-4 bg-gradient-to-r from-black to-[#050505] rounded-2xl border border-dashed border-white/10 hover:border-[#ff2d55]/30 transition-all group"
+                >
+                   <span className="text-gray-600 group-hover:text-gray-400 transition-colors">Diğer Paketler ve Rezervasyon</span>
+                   <span className="font-black text-[#ff2d55] text-[10px] uppercase tracking-tighter">Uygulamayı İndir →</span>
+                </a>
              </div>
           </div>
         </div>

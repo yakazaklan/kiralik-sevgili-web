@@ -35,34 +35,44 @@ export default function CityClient({ citySlug }: CityClientProps) {
           </h1>
 
           {cityData.slug === 'alanya' ? (
-            <div className="max-w-3xl mx-auto space-y-8">
-              <p className="text-xl text-gray-300 font-bold leading-relaxed">
-                Alanya'da dışarıda görüşebileceğiniz, birlikte vakit geçirebileceğiniz elit kadın ve erkek sosyal partnerleri keşfedin.
-              </p>
+            <div className="max-w-4xl mx-auto space-y-10">
+              {/* ALANYA SEO TEXT AT TOP */}
+              <div className="space-y-6">
+                <p className="text-xl md:text-2xl text-gray-200 font-bold leading-relaxed">
+                  Alanya seyahatinizde veya şehrin sosyal hayatında size eşlik edecek elit partnerleri keşfedin.
+                </p>
+                <p className="text-gray-400 leading-relaxed max-w-3xl mx-auto">
+                  Alanya'nın en güzel mekanlarında size partnerlik edecek, vizyon sahibi refakatçilerimizle tanışmak için
+                  resmi uygulamamızı indirebilirsiniz. <strong>Alanya eskort</strong> ve sosyal refakat arayışınızda
+                  en güvenli, yasal ve elit platform burasıdır.
+                </p>
+              </div>
 
-              {/* DOWNLOAD BUTTONS FOR ALANYA */}
-              <div className="flex flex-col sm:flex-row items-center justify-center gap-4 py-4">
+              {/* PREMIUM DOWNLOAD BUTTON */}
+              <div className="flex flex-col items-center justify-center py-2">
                 <a
                   href="https://play.google.com/store/apps/details?id=com.kiraliksevgili.kiralik_sevgili"
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="w-full sm:w-auto px-8 py-4 rounded-full bg-[#ff2d55] text-white font-black uppercase tracking-widest hover:scale-105 transition shadow-[0_0_30px_-5px_rgba(255,45,85,0.6)] flex items-center justify-center gap-3"
+                  className="group relative flex items-center gap-6 rounded-[2.5rem] bg-[#0a0a0a] border border-white/10 p-4 pr-12 transition-all hover:border-[#ff2d55]/50 hover:bg-[#111] hover:scale-[1.02] active:scale-95 shadow-[0_20px_50px_-12px_rgba(255,45,85,0.3)]"
                 >
-                  <span className="text-2xl">🤖</span> Google Play'den İndir
-                </a>
-                <a
-                  href="https://play.google.com/apps/testing/com.kiraliksevgili.kiralik_sevgili"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="w-full sm:w-auto px-8 py-4 rounded-full border border-white/20 text-white font-black uppercase tracking-widest hover:bg-white/5 transition flex items-center justify-center gap-3"
-                >
-                  <span className="text-2xl">🧪</span> Test Grubuna Katıl
+                  <div className="flex h-20 w-20 items-center justify-center rounded-[1.8rem] bg-gradient-to-br from-[#34a853] to-[#4285f4] text-4xl shadow-lg shadow-blue-500/20 ring-4 ring-black">
+                    <span className="group-hover:scale-110 transition-transform">🤖</span>
+                  </div>
+                  <div className="text-left">
+                    <p className="text-[10px] font-black tracking-[0.3em] text-[#34a853] uppercase mb-1">Resmi Uygulama</p>
+                    <p className="text-2xl font-black text-white uppercase tracking-tighter">Google Play</p>
+                    <p className="text-[9px] font-bold text-gray-500 uppercase tracking-widest mt-0.5">HEMEN ÜCRETSİZ İNDİR</p>
+                  </div>
+                  <div className="absolute right-6 text-gray-700 transition-all group-hover:text-[#ff2d55] group-hover:translate-x-2">
+                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><path d="M5 12h14m-7-7 7 7-7 7"/></svg>
+                  </div>
                 </a>
               </div>
 
               <div className="inline-block px-6 py-3 rounded-2xl bg-[#ff2d55]/10 border border-[#ff2d55]/20">
                 <p className="text-xs md:text-sm font-black text-[#ff2d55] uppercase tracking-widest">
-                  ⚠️ Kiralık Sevgili yalnızca sosyal refakat ve partnerlik hizmetidir. Cinsel hizmet sunulmaz.
+                  ⚠️ Kiralık Sevgili yalnızca sosyal refakat hizmetidir. Cinsel hizmet sunulmaz.
                 </p>
               </div>
             </div>

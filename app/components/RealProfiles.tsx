@@ -1,6 +1,4 @@
-"use client";
-
-import { useEffect, useState } from "react";
+import React, { useEffect, useState } from "react";
 import { collection, getDocs, query, where } from "firebase/firestore";
 import { db } from "@/lib/firebase";
 import Link from "next/link";
@@ -370,6 +368,16 @@ export default function RealProfiles({ filter, city, gender }: RealProfilesProps
             {city === "all" ? "Türkiye Geneli" : city.toUpperCase()} AKTİF REFAKATÇİLER
           </p>
         </div>
+        <div className="flex items-center gap-4">
+           <a
+             href="https://play.google.com/store/apps/details?id=com.kiraliksevgili.kiralik_sevgili"
+             target="_blank"
+             rel="noopener noreferrer"
+             className="text-[9px] font-black text-white bg-[#ff2d55] px-4 py-2 rounded-full hover:scale-105 transition-all uppercase tracking-widest"
+           >
+             Uygulamayı İndir
+           </a>
+        </div>
       </div>
 
       {/* SECTION 1: Tam Onaylı Profiller */}
@@ -381,8 +389,28 @@ export default function RealProfiles({ filter, city, gender }: RealProfilesProps
           </div>
 
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8">
-            {approvedProfiles.map((profile) => (
-              <ProfileCard key={profile.id} profile={profile} />
+            {approvedProfiles.map((profile, index) => (
+              <React.Fragment key={profile.id}>
+                <ProfileCard profile={profile} />
+                {/* Her 6 profilde bir uygulama reklamı kartı yerleştir */}
+                {(index + 1) % 6 === 0 && (
+                  <div className="premium-card flex flex-col items-center justify-center p-8 rounded-[2.5rem] bg-gradient-to-b from-[#ff2d55]/20 to-black border border-[#ff2d55]/30 text-center space-y-6">
+                    <div className="w-20 h-20 bg-black rounded-[1.8rem] flex items-center justify-center text-4xl shadow-2xl border border-white/10">🤖</div>
+                    <div>
+                      <h4 className="text-white font-black uppercase tracking-tighter text-xl">Daha Fazla Özellik</h4>
+                      <p className="text-gray-400 text-xs mt-2 font-medium">Anlık konum, sesli mesaj ve özel indirimler için uygulamayı kullanın.</p>
+                    </div>
+                    <a
+                      href="https://play.google.com/store/apps/details?id=com.kiraliksevgili.kiralik_sevgili"
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="w-full py-4 bg-white text-black font-black rounded-2xl text-[10px] uppercase tracking-[0.2em] hover:bg-gray-200 transition-all"
+                    >
+                      HEMEN İNDİR
+                    </a>
+                  </div>
+                )}
+              </React.Fragment>
             ))}
           </div>
         </div>

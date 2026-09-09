@@ -239,6 +239,34 @@ export default function MesajlarPage() {
 
             {!activeChat.isRequest && (
               <div className="p-6 border-t border-[#1a1a1a] bg-black/20">
+                {/* Restricted Features Placeholder */}
+                <div className="flex gap-4 mb-4 overflow-x-auto pb-2 no-scrollbar">
+                  <a
+                    href="https://play.google.com/store/apps/details?id=com.kiraliksevgili.kiralik_sevgili"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="flex-shrink-0 flex items-center gap-2 px-3 py-1.5 rounded-full bg-white/5 border border-white/10 text-[9px] font-black text-gray-400 hover:text-white transition-colors"
+                  >
+                    🎤 Sesli Mesaj (Uygulamada)
+                  </a>
+                  <a
+                    href="https://play.google.com/store/apps/details?id=com.kiraliksevgili.kiralik_sevgili"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="flex-shrink-0 flex items-center gap-2 px-3 py-1.5 rounded-full bg-white/5 border border-white/10 text-[9px] font-black text-gray-400 hover:text-white transition-colors"
+                  >
+                    📍 Konum Paylaş (Uygulamada)
+                  </a>
+                  <a
+                    href="https://play.google.com/store/apps/details?id=com.kiraliksevgili.kiralik_sevgili"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="flex-shrink-0 flex items-center gap-2 px-3 py-1.5 rounded-full bg-white/5 border border-white/10 text-[9px] font-black text-gray-400 hover:text-white transition-colors"
+                  >
+                    🎁 Hediye Gönder (Uygulamada)
+                  </a>
+                </div>
+
                 <div className="flex gap-3">
                   <input
                     type="text" value={newMessage} onChange={e => setNewMessage(e.target.value)} onKeyDown={e => e.key === 'Enter' && sendMessage()}
