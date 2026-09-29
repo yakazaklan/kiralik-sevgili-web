@@ -45,7 +45,7 @@ export default function Header() {
 
   return (
     <header className="sticky top-0 z-50 w-full border-b border-[#1a1a1a] bg-black/90 backdrop-blur-2xl">
-      <div className="mx-auto flex max-w-7xl flex-col gap-4 px-6 py-4">
+      <div className="mx-auto flex max-w-[1600px] flex-col gap-4 px-6 py-4">
         <div className="flex items-center justify-between relative">
           <Link href="/" className="flex items-center gap-3 shrink-0">
             <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-gradient-to-br from-[#ff2d55] to-[#d4af37] shadow-lg shadow-pink-500/20">
@@ -69,6 +69,14 @@ export default function Header() {
               href="https://play.google.com/store/apps/details?id=com.kiraliksevgili.kiralik_sevgili"
               target="_blank"
               rel="noopener noreferrer"
+              onClick={() => {
+                if (typeof window !== 'undefined' && (window as any).gtag) {
+                  (window as any).gtag('event', 'click_app_download', {
+                    'event_category': 'engagement',
+                    'event_label': 'Android Play Store'
+                  });
+                }
+              }}
               className="flex items-center gap-2 rounded-full bg-gradient-to-r from-[#34a853] to-[#4285f4] px-3 py-2 text-[9px] font-black uppercase tracking-tighter text-white transition hover:scale-105 active:scale-95 shadow-lg shadow-blue-500/20"
             >
               <span>🤖</span> <span className="hidden sm:inline">UYGULAMAYI</span> İNDİR
@@ -86,7 +94,15 @@ export default function Header() {
               </div>
             ) : (
               <button
-                onClick={handleLogin}
+                onClick={() => {
+                  if (typeof window !== 'undefined' && (window as any).gtag) {
+                    (window as any).gtag('event', 'click_login', {
+                      'event_category': 'auth',
+                      'event_label': 'Google Login Header'
+                    });
+                  }
+                  handleLogin();
+                }}
                 className="rounded-full bg-white px-4 py-2 text-[9px] font-black uppercase text-black transition hover:bg-[#ff2d55] hover:text-white"
               >
                 Giriş

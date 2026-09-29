@@ -1,9 +1,4 @@
 {
-  "version": 2,
-  "framework": "nextjs",
-  "buildCommand": "next build",
-  "outputDirectory": ".next",
-  "cleanUrls": true,
   "rewrites": [
     { "source": "/turkiye", "destination": "/" }
   ]

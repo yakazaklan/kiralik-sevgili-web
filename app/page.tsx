@@ -1,27 +1,20 @@
 "use client";
 
 import React, { useState, useEffect } from "react";
+import { useRouter } from "next/navigation";
+import Link from "next/link";
 import RealProfiles from "./components/RealProfiles";
-
-const ALL_CITIES = [
-  "Adana", "Adıyaman", "Afyonkarahisar", "Ağrı", "Amasya", "Ankara", "Antalya", "Artvin", "Aydın", "Balıkesir",
-  "Bilecik", "Bingöl", "Bitlis", "Bolu", "Burdur", "Bursa", "Çanakkale", "Çankırı", "Çorum", "Denizli",
-  "Diyarbakır", "Edirne", "Elazığ", "Erzincan", "Erzurum", "Eskişehir", "Gaziantep", "Giresun", "Gümüşhane", "Hakkari",
-  "Hatay", "Isparta", "Mersin", "İstanbul", "İzmir", "Kars", "Kastamonu", "Kayseri", "Kırklareli", "Kırşehir",
-  "Kocaeli", "Konya", "Kütahya", "Malatya", "Manisa", "Kahramanmaraş", "Mardin", "Muğla", "Muş", "Nevşehir",
-  "Niğde", "Ordu", "Rize", "Sakarya", "Samsun", "Siirt", "Sinop", "Sivas", "Tekirdağ", "Tokat",
-  "Trabzon", "Tunceli", "Şanlıurfa", "Uşak", "Van", "Yozgat", "Zonguldak", "Aksaray", "Bayburt", "Karaman",
-  "Kırıkkale", "Batman", "Şırnak", "Bartın", "Ardahan", "Iğdır", "Yalova", "Karabük", "Kilis", "Osmaniye", "Düzce", "Alanya"
-].sort();
+import CitySelector from "./components/CitySelector";
+import { CITIES, slugify } from "@/lib/turkey-zones";
 
 // Önemli şehirler (Ana ekranda sabit duracak olanlar)
 const PREFERRED_CITIES = ["İstanbul", "Ankara", "İzmir", "Antalya", "Alanya", "Bursa", "Muğla"];
 
 export default function Home() {
+  const router = useRouter();
   const [filter, setFilter] = useState("all");
   const [genderFilter, setGenderFilter] = useState("all");
   const [cityFilter, setCityFilter] = useState("all");
-  const [showAllCities, setShowAllCities] = useState(false);
   const [isLocating, setIsLocating] = useState(false);
 
   // JSON-LD Structured Data
@@ -29,6 +22,7 @@ export default function Home() {
     "@context": "https://schema.org",
     "@type": "WebSite",
     "name": "Kiralık Sevgili",
+    "alternateName": ["Kiralik Sevgili", "KiralıkSevgili"],
     "url": "https://kiraliksevgili.net",
     "potentialAction": {
       "@type": "SearchAction",
@@ -44,23 +38,29 @@ export default function Home() {
     "url": "https://kiraliksevgili.net",
     "logo": "https://kiraliksevgili.net/logo.png",
     "sameAs": [
-      "https://twitter.com/kiraliksevgili",
+      "https://x.com/kiraliksevgili",
       "https://instagram.com/kiraliksevgili"
     ]
   };
 
   // Otomatik Konum Tespiti
   useEffect(() => {
+    if (typeof window !== 'undefined' && (window as any).gtag) {
+      (window as any).gtag('event', 'view_homepage', {
+        'event_category': 'engagement',
+        'event_label': 'Home Page Ziyareti'
+      });
+    }
+
     const detectLocation = async () => {
+      // Otomatik konum tespiti varsayılan olarak "all" kalsın, kullanıcı isterse kendi seçsin veya API çok hızlıysa güncellensin, ama başlangıçta engellemesin
       if ("geolocation" in navigator) {
-        setIsLocating(true);
+        // Geolocation reverse geocoding bazen yavaş veya hatalı gelebilir, o yüzden varsayılan "all" değerini koruyarak sadece başarılı olursa güncelleyelim.
         navigator.geolocation.getCurrentPosition(async (position) => {
           try {
-            // Ücretsiz bir reverse geocoding API'si kullanarak şehri buluyoruz
             const res = await fetch(`https://nominatim.openstreetmap.org/reverse?lat=${position.coords.latitude}&lon=${position.coords.longitude}&format=json`);
             const data = await res.json();
 
-            // Alanya Özel Kontrolü: Town veya District alanlarında Alanya var mı bak
             const isAlanya =
               data.address.town?.toLowerCase().includes("alanya") ||
               data.address.district?.toLowerCase().includes("alanya") ||
@@ -71,8 +71,7 @@ export default function Home() {
             } else {
               const city = data.address.province || data.address.city || data.address.state;
               if (city) {
-                // Bulunan şehri bizim listemizdeki formatla eşleştiriyoruz
-                const matchedCity = ALL_CITIES.find(c => city.toLowerCase().includes(c.toLowerCase()));
+                const matchedCity = CITIES.find(c => city.toLowerCase().includes(c.toLowerCase()));
                 if (matchedCity) {
                   setCityFilter(matchedCity);
                 }
@@ -80,10 +79,8 @@ export default function Home() {
             }
           } catch (e) {
             console.error("Konum bulunamadı:", e);
-          } finally {
-            setIsLocating(false);
           }
-        }, () => setIsLocating(false));
+        }, () => {});
       }
     };
     detectLocation();
@@ -99,120 +96,122 @@ export default function Home() {
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(organizationLd) }}
       />
-      <section className="pb-24 pt-12">
-        <div className="mx-auto max-w-5xl px-6">
-          {/* SEO H1 BAŞLIĞI */}
-          <h1 className="sr-only">Kiralık Sevgili | Türkiye Geneli Sosyal Arkadaşlık ve Refakat Platformu</h1>
 
-          {/* FİLTRELEME PANELİ */}
-          <div className="mb-12 space-y-8">
-            <div className="flex flex-col items-center justify-between gap-6 md:flex-row">
-              <div>
-                <h2 className="text-3xl font-black tracking-tighter uppercase">
-                  {isLocating ? "KONUMUNUZ BELİRLENİYOR..." :
-                   cityFilter === "all" ? "Türkiye Geneli İLANLARINI KEŞFET" :
-                   `${cityFilter.toUpperCase()} İLANLARINI KEŞFET`}
-                </h2>
-                {cityFilter !== "all" && !isLocating && (
-                  <p className="text-[10px] font-bold text-[#ff2d55] tracking-widest mt-1">
-                    📍 {cityFilter.toUpperCase()} BÖLGESİNDEKİ AKTİF İLANLAR
-                  </p>
-                )}
-              </div>
+      {/* SEO & DISCLAIMER SECTION (HIDDEN BUT FOR GOOGLE) */}
+      <div className="sr-only">
+        <h2>Türkiye Sosyal Arkadaşlık ve Refakat Platformu</h2>
+        <p>
+          Kiralık Sevgili platformu Türkiye genelinde sosyal arkadaşlık, etkinlik refakatçisi ve sosyal eşlik profillerini keşfetmenizi sağlar.
+          Sosyal etkinlikler, iş yemekleri ve günlük aktiviteler için refakatçi ilanlarına ulaşabilirsiniz.
+        </p>
+      </div>
 
-              {/* Filtreler */}
-              <div className="flex flex-col sm:flex-row items-center gap-4">
-                {/* Cinsiyet Seçimi */}
-                <div className="flex items-center gap-2 rounded-full bg-[#0a0a0a] p-1.5 border border-[#1a1a1a]">
-                   {[
-                    { id: "all", label: "TÜMÜ" },
-                    { id: "Kadın", label: "KADIN" },
-                    { id: "Erkek", label: "ERKEK" },
-                    { id: "Çift", label: "ÇİFT" },
-                  ].map((item) => (
-                    <button
-                      key={item.id}
-                      onClick={() => setGenderFilter(item.id)}
-                      className={`rounded-full px-4 py-2 text-[8px] font-black tracking-widest transition-all ${
-                        genderFilter === item.id ? "bg-white text-black" : "text-gray-500 hover:text-gray-300"
-                      }`}
-                    >
-                      {item.label}
-                    </button>
-                  ))}
-                </div>
+      {/* HERO / SEO SECTION - MINIMAL */}
+      <section className="relative pt-12 pb-6 overflow-hidden">
+        <div className="mx-auto max-w-[1600px] px-6 text-center">
+          <div className="inline-block rounded-full bg-[#1a1a1a] px-6 py-2 text-[10px] font-black text-[#ff2d55] uppercase tracking-[0.2em] border border-[#ff2d55]/20">
+            ⚠️ Bu bir eskort sayfası değildir. Sadece sosyal refakat hizmeti verilir.
+          </div>
+        </div>
+      </section>
 
-                {/* Onay Filtresi */}
-                <div className="flex items-center gap-2 rounded-full bg-[#0a0a0a] p-1.5 border border-[#1a1a1a]">
-                  {[
-                    { id: "all", label: "TÜMÜ" },
-                    { id: "elite", label: "ELITE" },
-                    { id: "verified", label: "ONAYLI" },
-                  ].map((item) => (
-                    <button
-                      key={item.id}
-                      onClick={() => setFilter(item.id)}
-                      className={`rounded-full px-6 py-2 text-[9px] font-black tracking-widest transition-all ${
-                        filter === item.id ? "bg-[#ff2d55] text-white" : "text-gray-500 hover:text-gray-300"
-                      }`}
-                    >
-                      {item.label}
-                    </button>
-                  ))}
-                </div>
-              </div>
-            </div>
+      <section className="pb-24">
+        <div className="mx-auto max-w-[1600px] px-6 space-y-8">
+          {/* Şehir Seçimi Paneli */}
+          <div className="p-8 rounded-[2.5rem] bg-[#0a0a0a] border border-[#1a1a1a]">
+            <CitySelector />
 
-            {/* Şehir Seçimi */}
-            <div className="space-y-4">
-              <div className="flex flex-wrap items-center gap-3">
-                <span className="text-[10px] font-black text-gray-500 uppercase tracking-widest mr-2">Hızlı Seçim:</span>
-                <button
-                  onClick={() => setCityFilter("all")}
-                  className={`rounded-xl border px-4 py-2 text-[10px] font-bold transition-all ${
-                    cityFilter === "all" ? "border-[#ff2d55] bg-[#ff2d55]/10 text-white" : "border-[#1a1a1a] bg-[#0a0a0a] text-gray-500 hover:border-gray-700"
-                  }`}
-                >
-                  TÜRKİYE GENELİ
-                </button>
+            {/* Hızlı Şehir Seçimi */}
+            <div className="mt-6 flex flex-wrap items-center gap-3">
+              <span className="text-[10px] font-black text-gray-500 uppercase tracking-widest mr-2">Hızlı Seçim:</span>
+              <Link
+                href="/"
+                className={`rounded-xl border px-4 py-2 text-[10px] font-bold transition-all ${
+                  cityFilter === "all" ? "border-[#ff2d55] bg-[#ff2d55]/10 text-white" : "border-[#1a1a1a] bg-[#0a0a0a] text-gray-500 hover:border-gray-700"
+                }`}
+              >
+                TÜRKİYE GENELİ
+              </Link>
 
-                {/* Çift görünme sorunu burada PREFERRED_CITIES ile çözüldü */}
-                {PREFERRED_CITIES.map(city => (
-                  <button
+              {PREFERRED_CITIES.map(city => {
+                const slug = slugify(city);
+                const isActive = cityFilter.toLowerCase() === city.toLowerCase();
+                let href = `/${slug}`;
+
+                if (city.toLowerCase() === "alanya") {
+                  href = "/antalya/alanya";
+                }
+
+                return (
+                  <Link
                     key={city}
-                    onClick={() => setCityFilter(city)}
+                    href={href}
                     className={`rounded-xl border px-4 py-2 text-[10px] font-bold transition-all ${
-                      cityFilter === city ? "border-[#ff2d55] bg-[#ff2d55]/10 text-white" : "border-[#1a1a1a] bg-[#0a0a0a] text-gray-500 hover:border-gray-700"
+                      isActive ? "border-[#ff2d55] bg-[#ff2d55]/10 text-white" : "border-[#1a1a1a] bg-[#0a0a0a] text-gray-500 hover:border-gray-700"
                     }`}
                   >
                     {city.toUpperCase()}
+                  </Link>
+                );
+              })}
+            </div>
+          </div>
+
+          {/* FİLTRELEME PANELİ */}
+          <div className="flex flex-col items-center justify-between gap-6 md:flex-row pt-6">
+            <div>
+              <h2 className="text-3xl font-black tracking-tighter uppercase">
+                {isLocating ? "KONUMUNUZ BELİRLENİYOR..." :
+                 cityFilter === "all" ? "Türkiye Geneli İLANLARINI KEŞFET" :
+                 `${cityFilter.toUpperCase()} İLANLARINI KEŞFET`}
+              </h2>
+              {cityFilter !== "all" && !isLocating && (
+                <p className="text-[10px] font-bold text-[#ff2d55] tracking-widest mt-1">
+                  📍 {cityFilter.toUpperCase()} BÖLGESİNDEKİ AKTİF İLANLAR
+                </p>
+              )}
+            </div>
+
+            {/* Filtreler */}
+            <div className="flex flex-col sm:flex-row items-center gap-4">
+              {/* Cinsiyet Seçimi */}
+              <div className="flex items-center gap-2 rounded-full bg-[#0a0a0a] p-1.5 border border-[#1a1a1a]">
+                 {[
+                  { id: "all", label: "TÜMÜ" },
+                  { id: "Kadın", label: "KADIN" },
+                  { id: "Erkek", label: "ERKEK" },
+                  { id: "Çift", label: "ÇİFT" },
+                ].map((item) => (
+                  <button
+                    key={item.id}
+                    onClick={() => setGenderFilter(item.id)}
+                    className={`rounded-full px-4 py-2 text-[8px] font-black tracking-widest transition-all ${
+                      genderFilter === item.id ? "bg-white text-black" : "text-gray-500 hover:text-gray-300"
+                    }`}
+                  >
+                    {item.label}
                   </button>
                 ))}
-
-                <button
-                  onClick={() => setShowAllCities(!showAllCities)}
-                  className="rounded-xl border border-[#ff2d55]/30 bg-black px-4 py-2 text-[10px] font-black text-[#ff2d55] hover:bg-[#ff2d55] hover:text-white transition-all"
-                >
-                  {showAllCities ? "KAPAT ▲" : "DİĞER İLLER ▼"}
-                </button>
               </div>
 
-              {showAllCities && (
-                <div className="grid grid-cols-3 sm:grid-cols-5 md:grid-cols-8 gap-2 p-6 rounded-[2rem] bg-[#0a0a0a] border border-[#1a1a1a] max-h-60 overflow-y-auto custom-scrollbar shadow-2xl">
-                  {ALL_CITIES.map(city => (
-                    <button
-                      key={city}
-                      onClick={() => {
-                        setCityFilter(city);
-                        setShowAllCities(false);
-                      }}
-                      className={`text-[9px] font-bold p-2 text-left rounded-lg transition-colors hover:bg-[#1a1a1a] ${cityFilter === city ? "text-[#ff2d55]" : "text-gray-500"}`}
-                    >
-                      {city.toUpperCase()}
-                    </button>
-                  ))}
-                </div>
-              )}
+              {/* Onay Filtresi */}
+              <div className="flex items-center gap-2 rounded-full bg-[#0a0a0a] p-1.5 border border-[#1a1a1a]">
+                {[
+                  { id: "all", label: "TÜMÜ" },
+                  { id: "elite", label: "ELITE" },
+                  { id: "verified", label: "ONAYLI" },
+                ].map((item) => (
+                  <button
+                    key={item.id}
+                    onClick={() => setFilter(item.id)}
+                    className={`rounded-full px-6 py-2 text-[9px] font-black tracking-widest transition-all ${
+                      filter === item.id ? "bg-[#ff2d55] text-white" : "text-gray-500 hover:text-gray-300"
+                    }`}
+                  >
+                    {item.label}
+                  </button>
+                ))}
+              </div>
             </div>
           </div>
 
@@ -222,7 +221,7 @@ export default function Home() {
 
       {/* PREMIUM FOOTER */}
       <footer className="border-t border-[#1a1a1a] bg-[#050505] py-24">
-        <div className="mx-auto max-w-7xl px-6 text-center md:text-left">
+        <div className="mx-auto max-w-[1600px] px-6 text-center md:text-left">
           <div className="mb-20 grid grid-cols-1 md:grid-cols-4 gap-16">
             <div className="col-span-1 md:col-span-2">
               <div className="flex items-center justify-center md:justify-start gap-3 mb-8">
@@ -230,8 +229,8 @@ export default function Home() {
                 <span className="text-2xl font-black uppercase tracking-tighter">KİRALIK SEVGİLİ</span>
               </div>
               <p className="max-w-md text-sm font-medium text-gray-500 leading-relaxed mx-auto md:mx-0">
-                Türkiye'nin en seçkin ve güvenilir sosyal refakat platformu.
-                Etkinlikleriniz, iş yemekleriniz ve sosyal davetleriniz için profesyonel eşlik hizmetleri.
+                Türkiye genelinde sosyal arkadaşlık ve sosyal refakat profillerini keşfetmeye yardımcı olan platform.
+                Etkinlikleriniz, iş yemekleriniz ve sosyal davetleriniz için sosyal eşlik seçenekleri.
               </p>
             </div>
 
