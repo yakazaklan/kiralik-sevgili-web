@@ -2,7 +2,8 @@ import type { Metadata } from "next";
 import "./globals.css";
 import Header from "./components/Header";
 import SpotifyPlayer from "./components/SpotifyPlayer";
-import { SITE_URL } from "@/lib/site";
+import QuickChat from "./components/QuickChat";
+import { SITE_URL, absoluteUrl } from "@/lib/site";
 import Script from "next/script";
 
 export const metadata: Metadata = {
@@ -50,7 +51,7 @@ export const metadata: Metadata = {
     description: "Türkiye genelinde sosyal etkinlikler ve günlük aktiviteler için sosyal refakat platformu.",
   },
   alternates: {
-    canonical: SITE_URL,
+    canonical: absoluteUrl("/"),
   },
   icons: {
     icon: "/favicon.ico",
@@ -86,6 +87,7 @@ export default function RootLayout({
         <Header />
         {children}
         <SpotifyPlayer />
+        <QuickChat />
       </body>
     </html>
   );

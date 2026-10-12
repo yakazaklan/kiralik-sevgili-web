@@ -1,11 +1,12 @@
 import { Metadata } from "next";
+import { absoluteUrl } from "@/lib/site";
 
 export const metadata: Metadata = {
   title: "Topluluk Kuralları | Kiralık Sevgili",
   description:
     "Kiralık Sevgili topluluk kuralları. Güvenli sosyal arkadaşlık rehberi ve platform etik kuralları.",
   alternates: {
-    canonical: "https://kiraliksevgili.net/topluluk-kurallari",
+    canonical: absoluteUrl("/topluluk-kurallari"),
   },
 };
 
@@ -15,13 +16,13 @@ export default function ToplulukKurallari() {
       <div className="mx-auto max-w-4xl px-6 py-16">
         <a
           href="/"
-          className="text-sm font-black uppercase tracking-widest text-[#ff2d55] hover:text-white transition-colors"
+          className="text-sm font-black uppercase tracking-widest text-[#d4af37] hover:text-white transition-colors"
         >
           ← GERİ DÖN
         </a>
 
         <h1 className="mt-8 text-4xl font-black tracking-tighter uppercase">
-          Topluluk <span className="premium-gradient-text">Kuralları</span>
+          Topluluk <span className="text-transparent bg-clip-text bg-gradient-to-r from-[#d4af37] via-[#f3e5ab] to-[#d4af37]">Kuralları</span>
         </h1>
 
         <p className="mt-5 leading-8 text-gray-400 font-medium">
@@ -104,8 +105,8 @@ export default function ToplulukKurallari() {
           </div>
         </section>
 
-        <div className="mt-12 rounded-[2rem] bg-[#0a0a0a] border border-[#ff2d55]/20 p-8">
-          <h2 className="text-xl font-black uppercase tracking-tight text-[#ff2d55]">
+        <div className="mt-12 rounded-[2rem] bg-[#0a0a0a] border border-[#d4af37]/20 p-8">
+          <h2 className="text-xl font-black uppercase tracking-tight text-[#d4af37]">
             Güvenli bir topluluk için
           </h2>
 
@@ -118,7 +119,7 @@ export default function ToplulukKurallari() {
         <div className="mt-16 border-t border-[#1a1a1a] pt-12">
           <a
             href="/"
-            className="text-[10px] font-black uppercase tracking-[0.3em] text-gray-500 hover:text-[#ff2d55] transition-colors"
+            className="text-[10px] font-black uppercase tracking-[0.3em] text-gray-500 hover:text-[#d4af37] transition-colors"
           >
             © 2025 KİRALIK SEVGİLİ
           </a>

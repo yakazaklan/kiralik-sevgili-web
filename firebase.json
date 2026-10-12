@@ -1,55 +1,59 @@
 {
-  "hosting": [
+  "firestore": {
+    "rules": "firestore.rules",
+    "indexes": "firestore.indexes.json"
+  },
+  "functions": [
     {
-      "site": "kiralik-sevgili",
-      "public": "out",
-      "cleanUrls": true,
-      "trailingSlash": false,
-      "rewrites": [
-        {
-          "source": "/profil/**",
-          "destination": "/profil/ilan-detay.html"
-        },
-        {
-          "source": "/post/**",
-          "destination": "/index.html"
-        },
-        {
-          "source": "/story/**",
-          "destination": "/index.html"
-        },
-        {
-          "source": "**",
-          "destination": "/index.html"
-        }
-      ],
+      "source": "functions",
+      "codebase": "default",
+      "runtime": "nodejs22",
       "ignore": [
-        "firebase.json",
-        "**/.*",
-        "**/node_modules/**"
+        "node_modules",
+        ".git",
+        "firebase-debug.log",
+        "firestore-debug.log",
+        "functions-debug.log"
       ]
-    },
+    }
+  ],
+  "hosting": [
     {
       "site": "kiralik-sevgili-web",
       "public": "out",
       "cleanUrls": true,
-      "trailingSlash": false,
+      "trailingSlash": true,
       "rewrites": [
         {
+          "source": "/api/send-deletion-request/",
+          "function": "sendDeletionRequest"
+        },
+        {
+          "source": "/api/verify-deletion/",
+          "function": "verifyDeletion"
+        },
+        {
+          "source": "/profil/duzenle/**",
+          "destination": "/profil/duzenle/index.html"
+        },
+        {
+          "source": "/profil/ilan-detay/**",
+          "destination": "/profil/ilan-detay/index.html"
+        },
+        {
           "source": "/profil/**",
-          "destination": "/profil/ilan-detay.html"
-        },
+          "destination": "/profil/ilan-detay/index.html"
+        }
+      ],
+      "headers": [
         {
-          "source": "/post/**",
-          "destination": "/index.html"
-        },
-        {
-          "source": "/story/**",
-          "destination": "/index.html"
-        },
-        {
-          "source": "**",
-          "destination": "/index.html"
+          "source": "/**",
+          "headers": [
+            {
+              "key": "Cache-Control",
+              "value": "public, max-age=0, must-revalidate"
+            }
+          ]
         }
       ],
       "ignore": [
@@ -58,12 +62,5 @@
         "**/node_modules/**"
       ]
     }
-  ],
-  "firestore": {
-    "rules": "firestore.rules",
-    "indexes": "firestore.indexes.json"
-  },
-  "storage": {
-    "rules": "storage.rules"
-  }
+  ]
 }

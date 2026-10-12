@@ -4,6 +4,8 @@ import { notFound } from "next/navigation";
 import { getCityBySlug, slugify, TURKEY_DATA, CITIES } from "@/lib/turkey-zones";
 import Link from "next/link";
 import CityClientContent from "./CityClientContent";
+import { getCitySeoInfo } from "@/lib/seo-data";
+import { absoluteUrl } from "@/lib/site";
 
 interface PageProps {
   params: Promise<{ city: string }>;
@@ -21,7 +23,7 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
 
   const title = `Kiralık Sevgili ${actualCityName} | Sosyal Arkadaşlık ve Refakat`;
   const description = `${actualCityName} genelinde sosyal refakat ve platonik etkinlik arkadaşı arayanlar için topluluk platformu. Kültürel aktiviteler ve sosyal organizasyonlar için en doğru profil keşfi.`;
-  const canonical = `https://kiraliksevgili.net/${resolvedParams.city}`;
+  const canonical = absoluteUrl(resolvedParams.city);
 
   return {
     title,
@@ -48,9 +50,10 @@ export default async function CityPage({ params }: PageProps) {
   }
 
   const districts = TURKEY_DATA[actualCityName] || [];
+  const citySeoInfo = getCitySeoInfo(actualCityName);
 
   return (
-    <main className="min-h-screen bg-black text-white selection:bg-pink-500/30">
+    <main className="min-h-screen bg-black text-white selection:bg-[#d4af37]/30">
       {/* GÖRÜNÜR LOCAL SEO VE DETAY BLOKLARI */}
       <section className="relative pt-12 pb-6 bg-gradient-to-b from-[#0a0a0a] to-black border-b border-[#111]">
         <div className="mx-auto max-w-5xl px-6">
@@ -59,7 +62,7 @@ export default async function CityPage({ params }: PageProps) {
             <div className="flex items-center gap-2 text-[10px] font-black uppercase text-gray-500 tracking-wider">
               <Link href="/" className="hover:text-white transition-colors">ANA SAYFA</Link>
               <span>/</span>
-              <span className="text-[#ff2d55]">{actualCityName}</span>
+              <span className="text-[#d4af37]">{actualCityName}</span>
             </div>
 
             <h1 className="text-4xl font-black uppercase tracking-tight text-white mb-2">
@@ -74,6 +77,11 @@ export default async function CityPage({ params }: PageProps) {
             <p>
               <span className="text-gray-300 font-bold">{actualCityName} eskort</span> aramalarında internet kullanıcılarının karşısına çıkan cinsel nitelikli platformların aksine, Kiralık Sevgili tamamen elit refakat standartlarına odaklanır. Bu sayfada adı geçen hiçbir profil cinsel içerikli veya illegal bir vaatte bulunmaz. Platformumuz yalnızca sosyal arkadaş buluşmalarını ve medeni sohbet etkinliklerini destekleyen şeffaf bir ilan listeleme altyapısına sahiptir.
             </p>
+            {citySeoInfo && (
+              <div className="mt-6 p-5 rounded-xl bg-white/[0.02] border-l-4 border-[#d4af37] text-gray-300 italic shadow-inner">
+                {citySeoInfo}
+              </div>
+            )}
           </div>
         </div>
       </section>
@@ -88,7 +96,7 @@ export default async function CityPage({ params }: PageProps) {
       {/* SERVER-SIDE SEO DISCLAIMER FOOTER FOR CITY */}
       <footer className="mx-auto max-w-5xl px-6 pb-16">
         <div className="p-10 rounded-[2.5rem] bg-[#0a0a0a] border border-[#1a1a1a] text-center shadow-3xl">
-          <h4 className="text-[10px] font-black text-[#ff2d55] uppercase tracking-[0.4em] mb-4">
+          <h4 className="text-[10px] font-black text-[#d4af37] uppercase tracking-[0.4em] mb-4">
             {actualCityName.toUpperCase()} SOSYAL REFAKAT & KÜLTÜREL EŞLİK AĞI
           </h4>
           <p className="text-xs text-gray-500 leading-relaxed max-w-4xl mx-auto">

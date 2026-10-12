@@ -51,27 +51,26 @@
           "order": "ASCENDING"
         },
         {
-          "fieldPath": "hasProfile",
-          "order": "ASCENDING"
-        },
-        {
-          "fieldPath": "isActive",
-          "order": "ASCENDING"
-        },
-        {
-          "fieldPath": "isInvisible",
-          "order": "ASCENDING"
-        },
-        {
-          "fieldPath": "age",
-          "order": "ASCENDING"
-        },
-        {
-          "fieldPath": "__name__",
+          "fieldPath": "isApproved",
           "order": "ASCENDING"
         }
       ],
-      "density": "SPARSE_ALL"
+      "density": "COLLECTION"
+    },
+    {
+      "collectionGroup": "users",
+      "queryScope": "COLLECTION",
+      "fields": [
+        {
+          "fieldPath": "role",
+          "order": "ASCENDING"
+        },
+        {
+          "fieldPath": "status",
+          "order": "ASCENDING"
+        }
+      ],
+      "density": "COLLECTION"
     }
   ],
   "fieldOverrides": []

@@ -19,18 +19,18 @@ export default function CityClient({ citySlug }: CityClientProps) {
   const cityName = cityData.name;
 
   return (
-    <main className="min-h-screen bg-black text-white selection:bg-pink-500/30">
+    <main className="min-h-screen bg-black text-white selection:bg-[#d4af37]/30">
       {/* HERO SECTION */}
       <section className="relative pt-20 pb-12 overflow-hidden border-b border-[#1a1a1a]">
         <div className="mx-auto max-w-7xl px-6 text-center">
           <h1 className="text-4xl md:text-7xl font-black tracking-tighter uppercase mb-6 leading-tight">
             {cityData.slug === 'alanya' ? (
               <>
-                ALANYA <span className="text-[#ff2d55]">ESKORT</span> <br className="hidden md:block"/>
+                ALANYA <span className="text-[#d4af37]">ESKORT</span> <br className="hidden md:block"/>
                 <span className="text-2xl md:text-4xl text-gray-400">& SOSYAL REFAKAT</span>
               </>
             ) : (
-              <>{cityName} <span className="text-[#ff2d55]">Kiralık Sevgili</span></>
+              <>{cityName} <span className="text-[#d4af37]">Kiralık Sevgili</span></>
             )}
           </h1>
 
@@ -54,7 +54,7 @@ export default function CityClient({ citySlug }: CityClientProps) {
                   href="https://play.google.com/store/apps/details?id=com.kiraliksevgili.kiralik_sevgili"
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="group relative flex items-center gap-6 rounded-[2.5rem] bg-[#0a0a0a] border border-white/10 p-4 pr-12 transition-all hover:border-[#ff2d55]/50 hover:bg-[#111] hover:scale-[1.02] active:scale-95 shadow-[0_20px_50px_-12px_rgba(255,45,85,0.3)]"
+                  className="group relative flex items-center gap-6 rounded-[2.5rem] bg-[#0a0a0a] border border-white/10 p-4 pr-12 transition-all hover:border-[#d4af37]/50 hover:bg-[#111] hover:scale-[1.02] active:scale-95 shadow-[0_20px_50px_-12px_rgba(212,175,55,0.3)]"
                 >
                   <div className="flex h-20 w-20 items-center justify-center rounded-[1.8rem] bg-gradient-to-br from-[#34a853] to-[#4285f4] text-4xl shadow-lg shadow-blue-500/20 ring-4 ring-black">
                     <span className="group-hover:scale-110 transition-transform">🤖</span>
@@ -64,14 +64,14 @@ export default function CityClient({ citySlug }: CityClientProps) {
                     <p className="text-2xl font-black text-white uppercase tracking-tighter">Google Play</p>
                     <p className="text-[9px] font-bold text-gray-500 uppercase tracking-widest mt-0.5">HEMEN ÜCRETSİZ İNDİR</p>
                   </div>
-                  <div className="absolute right-6 text-gray-700 transition-all group-hover:text-[#ff2d55] group-hover:translate-x-2">
+                  <div className="absolute right-6 text-gray-700 transition-all group-hover:text-[#d4af37] group-hover:translate-x-2">
                     <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><path d="M5 12h14m-7-7 7 7-7 7"/></svg>
                   </div>
                 </a>
               </div>
 
-              <div className="inline-block px-6 py-3 rounded-2xl bg-[#ff2d55]/10 border border-[#ff2d55]/20">
-                <p className="text-xs md:text-sm font-black text-[#ff2d55] uppercase tracking-widest">
+              <div className="inline-block px-6 py-3 rounded-2xl bg-[#d4af37]/10 border border-[#d4af37]/20">
+                <p className="text-xs md:text-sm font-black text-[#d4af37] uppercase tracking-widest">
                   ⚠️ Kiralık Sevgili yalnızca sosyal refakat hizmetidir. Cinsel hizmet sunulmaz.
                 </p>
               </div>
@@ -89,7 +89,7 @@ export default function CityClient({ citySlug }: CityClientProps) {
         <section className="py-16 border-b border-[#1a1a1a] bg-[#050505]">
           <div className="mx-auto max-w-4xl px-6">
             <div className="p-8 rounded-[2.5rem] border border-white/5 bg-black">
-              <h2 className="text-[10px] font-black text-[#ff2d55] uppercase tracking-[0.4em] mb-6">
+              <h2 className="text-[10px] font-black text-[#d4af37] uppercase tracking-[0.4em] mb-6">
                 ⚠️ Önemli Bilgi
               </h2>
               <p className="text-gray-400 text-lg leading-relaxed">
@@ -109,7 +109,7 @@ export default function CityClient({ citySlug }: CityClientProps) {
               {cityData.slug === 'alanya' ? '🔥 Alanya\'da Aktif Profiller' : `${cityName} Aktif İlanlar`}
             </h2>
             <div className="hidden sm:flex items-center gap-2 px-4 py-2 rounded-full border border-white/5 bg-white/5 text-[10px] font-black text-gray-400">
-              <span className="w-2 h-2 rounded-full bg-[#ff2d55] animate-pulse"></span>
+              <span className="w-2 h-2 rounded-full bg-[#d4af37] animate-pulse"></span>
               GÜNCEL LİSTE
             </div>
           </div>

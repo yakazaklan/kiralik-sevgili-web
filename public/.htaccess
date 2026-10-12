@@ -1,0 +1,23 @@
+<IfModule mod_rewrite.c>
+  RewriteEngine On
+  RewriteBase /
+
+  # Ensure direct access to static files works correctly
+  RewriteCond %{REQUEST_FILENAME} -f [OR]
+  RewriteCond %{REQUEST_FILENAME} -d
+  RewriteRule ^ - [L]
+
+  # Redirect paths without a trailing slash to trailing slash (except files) to prevent 404 on trailingSlash: true directories
+  RewriteCond %{REQUEST_FILENAME} !-f
+  RewriteCond %{REQUEST_URI} !(.*)/$
+  RewriteRule ^(.*)$ /$1/ [R=301,L]
+
+  # Route arbitrary dynamic profile IDs into the client-side profile SPA entrypoint /profil/ilan-detay/index.html
+  RewriteCond %{REQUEST_FILENAME} !-f
+  RewriteRule ^profil/([^/]+)/?$ /profil/ilan-detay/index.html [L]
+
+  # Dynamic fallback routing for main app/SPA routes if files are missing
+  RewriteCond %{REQUEST_FILENAME} !-f
+  RewriteRule ^index\.html$ - [L]
+  RewriteRule . /index.html [L]
+</IfModule>

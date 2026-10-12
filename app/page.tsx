@@ -7,6 +7,8 @@ import RealProfiles from "./components/RealProfiles";
 import CitySelector from "./components/CitySelector";
 import { CITIES, slugify } from "@/lib/turkey-zones";
 
+import { SITE_URL, absoluteUrl } from "@/lib/site";
+
 // Önemli şehirler (Ana ekranda sabit duracak olanlar)
 const PREFERRED_CITIES = ["İstanbul", "Ankara", "İzmir", "Antalya", "Alanya", "Bursa", "Muğla"];
 
@@ -23,10 +25,10 @@ export default function Home() {
     "@type": "WebSite",
     "name": "Kiralık Sevgili",
     "alternateName": ["Kiralik Sevgili", "KiralıkSevgili"],
-    "url": "https://kiraliksevgili.net",
+    "url": absoluteUrl("/"),
     "potentialAction": {
       "@type": "SearchAction",
-      "target": "https://kiraliksevgili.net/?q={search_term_string}",
+      "target": `${absoluteUrl("/")}?q={search_term_string}`,
       "query-input": "required name=search_term_string"
     }
   };
@@ -35,181 +37,96 @@ export default function Home() {
     "@context": "https://schema.org",
     "@type": "Organization",
     "name": "Kiralık Sevgili",
-    "url": "https://kiraliksevgili.net",
-    "logo": "https://kiraliksevgili.net/logo.png",
+    "url": absoluteUrl("/"),
+    "logo": absoluteUrl("logo.png"),
     "sameAs": [
       "https://x.com/kiraliksevgili",
       "https://instagram.com/kiraliksevgili"
     ]
   };
 
-  // Otomatik Konum Tespiti
+  // Otomatik Konum Tespiti (Devre dışı bırakıldı - ilanların görünmesini engelleyebilir)
+  /*
   useEffect(() => {
-    if (typeof window !== 'undefined' && (window as any).gtag) {
-      (window as any).gtag('event', 'view_homepage', {
-        'event_category': 'engagement',
-        'event_label': 'Home Page Ziyareti'
-      });
-    }
-
     const detectLocation = async () => {
-      // Otomatik konum tespiti varsayılan olarak "all" kalsın, kullanıcı isterse kendi seçsin veya API çok hızlıysa güncellensin, ama başlangıçta engellemesin
       if ("geolocation" in navigator) {
-        // Geolocation reverse geocoding bazen yavaş veya hatalı gelebilir, o yüzden varsayılan "all" değerini koruyarak sadece başarılı olursa güncelleyelim.
         navigator.geolocation.getCurrentPosition(async (position) => {
           try {
             const res = await fetch(`https://nominatim.openstreetmap.org/reverse?lat=${position.coords.latitude}&lon=${position.coords.longitude}&format=json`);
             const data = await res.json();
-
-            const isAlanya =
-              data.address.town?.toLowerCase().includes("alanya") ||
-              data.address.district?.toLowerCase().includes("alanya") ||
-              data.address.suburb?.toLowerCase().includes("alanya");
-
-            if (isAlanya) {
-              setCityFilter("Alanya");
-            } else {
-              const city = data.address.province || data.address.city || data.address.state;
+            const isAlanya = data.address.town?.toLowerCase().includes("alanya") || data.address.district?.toLowerCase().includes("alanya");
+            if (isAlanya) setCityFilter("Alanya");
+            else {
+              const city = data.address.province || data.address.city;
               if (city) {
                 const matchedCity = CITIES.find(c => city.toLowerCase().includes(c.toLowerCase()));
-                if (matchedCity) {
-                  setCityFilter(matchedCity);
-                }
+                if (matchedCity) setCityFilter(matchedCity);
               }
             }
-          } catch (e) {
-            console.error("Konum bulunamadı:", e);
-          }
+          } catch (e) {}
         }, () => {});
       }
     };
     detectLocation();
   }, []);
+  */
 
   return (
-    <main className="min-h-screen bg-black text-white selection:bg-pink-500/30">
-      <script
-        type="application/ld+json"
-        dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
-      />
-      <script
-        type="application/ld+json"
-        dangerouslySetInnerHTML={{ __html: JSON.stringify(organizationLd) }}
-      />
+    <main className="min-h-screen bg-black text-white selection:bg-[#d4af37]/30">
+      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }} />
+      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(organizationLd) }} />
 
-      {/* SEO & DISCLAIMER SECTION (HIDDEN BUT FOR GOOGLE) */}
-      <div className="sr-only">
-        <h2>Türkiye Sosyal Arkadaşlık ve Refakat Platformu</h2>
-        <p>
-          Kiralık Sevgili platformu Türkiye genelinde sosyal arkadaşlık, etkinlik refakatçisi ve sosyal eşlik profillerini keşfetmenizi sağlar.
-          Sosyal etkinlikler, iş yemekleri ve günlük aktiviteler için refakatçi ilanlarına ulaşabilirsiniz.
-        </p>
-      </div>
-
-      {/* HERO / SEO SECTION - MINIMAL */}
-      <section className="relative pt-12 pb-6 overflow-hidden">
-        <div className="mx-auto max-w-[1600px] px-6 text-center">
-          <div className="inline-block rounded-full bg-[#1a1a1a] px-6 py-2 text-[10px] font-black text-[#ff2d55] uppercase tracking-[0.2em] border border-[#ff2d55]/20">
-            ⚠️ Bu bir eskort sayfası değildir. Sadece sosyal refakat hizmeti verilir.
+      {/* COMPACT HERO SECTION */}
+      <section className="relative pt-16 pb-12 overflow-hidden border-b border-white/5 bg-[#050505]">
+        <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_0%,rgba(212,175,55,0.08),transparent_70%)] pointer-events-none"></div>
+        <div className="mx-auto max-w-[1600px] px-6 text-center relative z-10">
+          <div className="inline-flex items-center gap-2 rounded-full bg-white/[0.03] backdrop-blur-3xl px-6 py-2 text-[8px] font-black text-[#d4af37] uppercase tracking-[0.4em] border border-[#d4af37]/20 mb-8">
+            <span className="w-1.5 h-1.5 rounded-full bg-[#d4af37] animate-pulse"></span>
+            TÜRKİYE'NİN PRESTİJLİ SOSYAL PLATFORMU
           </div>
+          <h1 className="text-xl md:text-2xl lg:text-3xl font-black tracking-tight text-white mb-3 uppercase leading-[1.1]">
+            ESTETİK, <span className="text-[#d4af37] italic font-light">MÜKEMMELİYET</span> VE EŞLİK
+          </h1>
+          <p className="max-w-xl mx-auto text-white/40 text-xs md:text-sm font-medium tracking-wide leading-relaxed">
+            Seçkin etkinlikleriniz için prestijli sosyal refakatçi topluluğu.
+          </p>
         </div>
       </section>
 
-      <section className="pb-24">
-        <div className="mx-auto max-w-[1600px] px-6 space-y-8">
+      <section className="pb-20 bg-black">
+        <div className="mx-auto max-w-[1600px] px-6 space-y-12">
           {/* Şehir Seçimi Paneli */}
-          <div className="p-8 rounded-[2.5rem] bg-[#0a0a0a] border border-[#1a1a1a]">
-            <CitySelector />
-
-            {/* Hızlı Şehir Seçimi */}
-            <div className="mt-6 flex flex-wrap items-center gap-3">
-              <span className="text-[10px] font-black text-gray-500 uppercase tracking-widest mr-2">Hızlı Seçim:</span>
-              <Link
-                href="/"
-                className={`rounded-xl border px-4 py-2 text-[10px] font-bold transition-all ${
-                  cityFilter === "all" ? "border-[#ff2d55] bg-[#ff2d55]/10 text-white" : "border-[#1a1a1a] bg-[#0a0a0a] text-gray-500 hover:border-gray-700"
-                }`}
-              >
-                TÜRKİYE GENELİ
-              </Link>
-
-              {PREFERRED_CITIES.map(city => {
-                const slug = slugify(city);
-                const isActive = cityFilter.toLowerCase() === city.toLowerCase();
-                let href = `/${slug}`;
-
-                if (city.toLowerCase() === "alanya") {
-                  href = "/antalya/alanya";
-                }
-
-                return (
-                  <Link
-                    key={city}
-                    href={href}
-                    className={`rounded-xl border px-4 py-2 text-[10px] font-bold transition-all ${
-                      isActive ? "border-[#ff2d55] bg-[#ff2d55]/10 text-white" : "border-[#1a1a1a] bg-[#0a0a0a] text-gray-500 hover:border-gray-700"
-                    }`}
-                  >
-                    {city.toUpperCase()}
-                  </Link>
-                );
-              })}
+          <div className="relative -mt-8 z-20">
+            <div className="p-6 md:p-8 rounded-[2rem] bg-[#080808] border border-white/5 shadow-2xl">
+              <CitySelector />
+              <div className="mt-8 flex flex-wrap items-center justify-center gap-2">
+                <Link href="/" className={`rounded-xl border px-5 py-2.5 text-[8px] font-black transition-all tracking-widest ${cityFilter === "all" ? "border-[#d4af37] text-[#d4af37] bg-[#d4af37]/5" : "border-white/5 text-white/40 hover:text-white"}`}>TÜRKİYE GENELİ</Link>
+                {PREFERRED_CITIES.map(city => (
+                  <Link key={city} href={city.toLowerCase() === "alanya" ? "/antalya/alanya" : `/${slugify(city)}`} className={`rounded-xl border px-5 py-2.5 text-[8px] font-black transition-all tracking-widest ${cityFilter.toLowerCase() === city.toLowerCase() ? "border-[#d4af37] text-[#d4af37] bg-[#d4af37]/5" : "border-white/5 text-white/40 hover:text-white"}`}>{city.toUpperCase()}</Link>
+                ))}
+              </div>
             </div>
           </div>
 
-          {/* FİLTRELEME PANELİ */}
-          <div className="flex flex-col items-center justify-between gap-6 md:flex-row pt-6">
-            <div>
-              <h2 className="text-3xl font-black tracking-tighter uppercase">
-                {isLocating ? "KONUMUNUZ BELİRLENİYOR..." :
-                 cityFilter === "all" ? "Türkiye Geneli İLANLARINI KEŞFET" :
-                 `${cityFilter.toUpperCase()} İLANLARINI KEŞFET`}
-              </h2>
-              {cityFilter !== "all" && !isLocating && (
-                <p className="text-[10px] font-bold text-[#ff2d55] tracking-widest mt-1">
-                  📍 {cityFilter.toUpperCase()} BÖLGESİNDEKİ AKTİF İLANLAR
-                </p>
-              )}
+          {/* FİLTRELER */}
+          <div className="flex flex-col items-center justify-between gap-4 lg:flex-row pt-4 border-t border-white/5">
+            <div className="text-center lg:text-left space-y-1">
+              <div className="flex items-center gap-2 justify-center lg:justify-start">
+                <div className="w-6 h-[1px] bg-[#d4af37]"></div>
+                <span className="text-[7px] font-black text-[#d4af37] uppercase tracking-[0.3em]">SEÇKİ</span>
+              </div>
+              <h2 className="text-lg font-black uppercase text-white">{cityFilter === "all" ? "TÜRKİYE" : cityFilter.toUpperCase()} ÖZEL</h2>
             </div>
 
-            {/* Filtreler */}
-            <div className="flex flex-col sm:flex-row items-center gap-4">
-              {/* Cinsiyet Seçimi */}
-              <div className="flex items-center gap-2 rounded-full bg-[#0a0a0a] p-1.5 border border-[#1a1a1a]">
-                 {[
-                  { id: "all", label: "TÜMÜ" },
-                  { id: "Kadın", label: "KADIN" },
-                  { id: "Erkek", label: "ERKEK" },
-                  { id: "Çift", label: "ÇİFT" },
-                ].map((item) => (
-                  <button
-                    key={item.id}
-                    onClick={() => setGenderFilter(item.id)}
-                    className={`rounded-full px-4 py-2 text-[8px] font-black tracking-widest transition-all ${
-                      genderFilter === item.id ? "bg-white text-black" : "text-gray-500 hover:text-gray-300"
-                    }`}
-                  >
-                    {item.label}
-                  </button>
+            <div className="flex flex-col sm:flex-row items-center gap-3">
+              <div className="flex items-center gap-1 rounded-full bg-white/[0.03] p-1 border border-white/10">
+                {["all", "Kadın", "Erkek", "Çift"].map((g) => (
+                  <button key={g} onClick={() => setGenderFilter(g)} className={`rounded-full px-5 py-2 text-[8px] font-black tracking-widest transition-all ${genderFilter === g ? "bg-white text-black" : "text-white/40 hover:text-white"}`}>{g === "all" ? "HEPSİ" : g.toUpperCase()}</button>
                 ))}
               </div>
-
-              {/* Onay Filtresi */}
-              <div className="flex items-center gap-2 rounded-full bg-[#0a0a0a] p-1.5 border border-[#1a1a1a]">
-                {[
-                  { id: "all", label: "TÜMÜ" },
-                  { id: "elite", label: "ELITE" },
-                  { id: "verified", label: "ONAYLI" },
-                ].map((item) => (
-                  <button
-                    key={item.id}
-                    onClick={() => setFilter(item.id)}
-                    className={`rounded-full px-6 py-2 text-[9px] font-black tracking-widest transition-all ${
-                      filter === item.id ? "bg-[#ff2d55] text-white" : "text-gray-500 hover:text-gray-300"
-                    }`}
-                  >
-                    {item.label}
-                  </button>
+              <div className="flex items-center gap-1 rounded-full bg-white/[0.03] p-1 border border-white/10">
+                {["all", "elite", "verified"].map((f) => (
+                  <button key={f} onClick={() => setFilter(f)} className={`rounded-full px-5 py-2 text-[8px] font-black tracking-widest transition-all ${filter === f ? "bg-[#d4af37] text-black" : "text-white/40 hover:text-white"}`}>{f === "all" ? "TÜMÜ" : f.toUpperCase()}</button>
                 ))}
               </div>
             </div>
@@ -219,50 +136,15 @@ export default function Home() {
         </div>
       </section>
 
-      {/* PREMIUM FOOTER */}
-      <footer className="border-t border-[#1a1a1a] bg-[#050505] py-24">
-        <div className="mx-auto max-w-[1600px] px-6 text-center md:text-left">
-          <div className="mb-20 grid grid-cols-1 md:grid-cols-4 gap-16">
-            <div className="col-span-1 md:col-span-2">
-              <div className="flex items-center justify-center md:justify-start gap-3 mb-8">
-                <span className="text-3xl">💗</span>
-                <span className="text-2xl font-black uppercase tracking-tighter">KİRALIK SEVGİLİ</span>
-              </div>
-              <p className="max-w-md text-sm font-medium text-gray-500 leading-relaxed mx-auto md:mx-0">
-                Türkiye genelinde sosyal arkadaşlık ve sosyal refakat profillerini keşfetmeye yardımcı olan platform.
-                Etkinlikleriniz, iş yemekleriniz ve sosyal davetleriniz için sosyal eşlik seçenekleri.
-              </p>
-            </div>
-
-            <div>
-              <h4 className="text-[10px] font-black text-gray-300 uppercase tracking-[0.3em] mb-8">Kurumsal</h4>
-              <ul className="space-y-5 text-xs font-bold text-gray-500">
-                <li><a href="/gizlilik" className="hover:text-[#ff2d55] transition-colors uppercase tracking-widest">Gizlilik Politikası</a></li>
-                <li><a href="/kullanim-sartlari" className="hover:text-[#ff2d55] transition-colors uppercase tracking-widest">Kullanım Şartları</a></li>
-                <li><a href="/topluluk-kurallari" className="hover:text-[#ff2d55] transition-colors uppercase tracking-widest">Topluluk Kuralları</a></li>
-                <li><a href="/kvkk" className="hover:text-[#ff2d55] transition-colors uppercase tracking-widest">KVKK Aydınlatma</a></li>
-              </ul>
-            </div>
-
-            <div>
-              <h4 className="text-[10px] font-black text-gray-300 uppercase tracking-[0.3em] mb-8">Destek</h4>
-              <ul className="space-y-5 text-xs font-bold text-gray-500">
-                <li><a href="/iletisim" className="hover:text-[#ff2d55] transition-colors uppercase tracking-widest">Bize Ulaşın</a></li>
-                <li><a href="/yardim-merkezi" className="hover:text-[#ff2d55] transition-colors uppercase tracking-widest">Yardım Merkezi</a></li>
-                <li><a href="/iletisim" className="hover:text-[#ff2d55] transition-colors uppercase tracking-widest">Şikayet Bildir</a></li>
-              </ul>
-            </div>
+      <footer className="border-t border-white/5 bg-[#050505] py-12">
+        <div className="mx-auto max-w-[1600px] px-6 text-center">
+          <div className="flex flex-wrap justify-center gap-6 mb-6">
+            <Link href="/gizlilik" className="text-[8px] font-black text-white/40 hover:text-[#d4af37] uppercase tracking-[0.2em] transition-colors">Gizlilik Politikası</Link>
+            <Link href="/kullanim-sartlari" className="text-[8px] font-black text-white/40 hover:text-[#d4af37] uppercase tracking-[0.2em] transition-colors">Kullanım Şartları</Link>
+            <Link href="/hesap-silme" className="text-[8px] font-black text-[#d4af37] hover:text-white uppercase tracking-[0.2em] transition-colors">Hesap Silme</Link>
+            <Link href="/iletisim" className="text-[8px] font-black text-white/40 hover:text-[#d4af37] uppercase tracking-[0.2em] transition-colors">İletişim</Link>
           </div>
-
-          <div className="border-t border-[#1a1a1a] pt-12 flex flex-col md:flex-row justify-between items-center gap-8">
-            <p className="text-[10px] font-bold text-gray-600 uppercase tracking-[0.2em]">
-              © 2025 Kiralık Sevgili. Tüm hakları saklıdır.
-            </p>
-            <div className="flex gap-10 text-[10px] font-black text-gray-700 uppercase tracking-widest">
-              <span>Adults Only 18+</span>
-              <span className="text-[#d4af37]">Verified Platform</span>
-            </div>
-          </div>
+          <p className="text-[8px] font-black text-white/20 uppercase tracking-[0.4em]">© 2025 KİRALIK SEVGİLİ. ALL RIGHTS RESERVED.</p>
         </div>
       </footer>
     </main>

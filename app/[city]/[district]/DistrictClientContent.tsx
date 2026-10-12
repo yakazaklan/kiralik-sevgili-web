@@ -28,17 +28,17 @@ export default function DistrictClientContent({ cityParam, districtParam, cityNa
 
   return (
     <>
-      <div className="p-8 rounded-[2.5rem] bg-[#0a0a0a] border border-[#1a1a1a]">
+      <div className="p-6 rounded-[2rem] bg-[#0a0a0a] border border-[#1a1a1a]">
         <CitySelector currentCity={cityParam} currentDistrict={districtParam} />
       </div>
 
-      <div className="flex flex-col items-center justify-between gap-6 md:flex-row pt-6">
+      <div className="flex flex-col items-center justify-between gap-4 md:flex-row pt-4 border-t border-white/5">
         <div>
-          <h2 className="text-3xl font-black tracking-tighter uppercase">{districtName} BÖLGESİNDEKİ İLANLAR</h2>
+          <h2 className="text-lg font-black tracking-tighter uppercase">{districtName} BÖLGESİNDEKİ İLANLAR</h2>
         </div>
 
         <div className="flex flex-col sm:flex-row items-center gap-4">
-          <div className="flex items-center gap-2 rounded-full bg-[#0a0a0a] p-1.5 border border-[#1a1a1a]">
+          <div className="flex items-center gap-1.5 rounded-2xl bg-white/[0.02] p-1.5 border border-white/5">
             {[
               { id: "all", label: "TÜMÜ" },
               { id: "Kadın", label: "KADIN" },
@@ -48,8 +48,8 @@ export default function DistrictClientContent({ cityParam, districtParam, cityNa
               <button
                 key={item.id}
                 onClick={() => setGenderFilter(item.id)}
-                className={`rounded-full px-4 py-2 text-[8px] font-black tracking-widest transition-all ${
-                  genderFilter === item.id ? "bg-white text-black" : "text-gray-500 hover:text-gray-300"
+                className={`rounded-xl px-4 py-2 text-[8px] font-black tracking-widest transition-all duration-500 ${
+                  genderFilter === item.id ? "bg-white text-black shadow-xl" : "text-gray-500 hover:text-gray-300"
                 }`}
               >
                 {item.label}
@@ -57,19 +57,17 @@ export default function DistrictClientContent({ cityParam, districtParam, cityNa
             ))}
           </div>
 
-          <div className="flex items-center gap-2 rounded-full bg-[#0a0a0a] p-1.5 border border-[#1a1a1a]">
+          <div className="flex items-center gap-1.5 rounded-2xl bg-white/[0.02] p-1.5 border border-white/5">
             {[
-              { id: "all", label: "TÜMÜ" },
-              { id: "elite", label: "ELITE" },
+              { id: "all", label: "TÜM ÜYELER" },
+              { id: "elite", label: "ELİT" },
               { id: "verified", label: "ONAYLI" },
             ].map((item) => (
               <button
                 key={item.id}
                 onClick={() => setFilter(item.id)}
-                className={`rounded-full px-6 py-2 text-[9px] font-black tracking-widest transition-all ${
-                  filter === item.id
-                    ? "bg-[#ff2d55] text-white shadow-lg shadow-pink-500/20"
-                    : "text-gray-500 hover:text-gray-300"
+                className={`rounded-xl px-5 py-2 text-[8px] font-black tracking-widest transition-all duration-500 ${
+                  filter === item.id ? "bg-[#d4af37] text-black" : "text-gray-500 hover:text-gray-300"
                 }`}
               >
                 {item.label}

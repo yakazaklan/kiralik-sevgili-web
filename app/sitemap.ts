@@ -8,69 +8,75 @@ export default function sitemap(): MetadataRoute.Sitemap {
 
   const staticRoutes: MetadataRoute.Sitemap = [
     {
-      url: baseUrl,
+      url: `${baseUrl}/`,
       lastModified: new Date(),
       changeFrequency: "daily",
       priority: 1.0,
     },
     {
-      url: `${baseUrl}/kullanim-sartlari`,
+      url: `${baseUrl}/kullanim-sartlari/`,
       lastModified: new Date(),
       changeFrequency: "monthly",
       priority: 0.3,
     },
     {
-      url: `${baseUrl}/gizlilik`,
+      url: `${baseUrl}/gizlilik/`,
       lastModified: new Date(),
       changeFrequency: "monthly",
       priority: 0.3,
     },
     {
-      url: `${baseUrl}/iletisim`,
+      url: `${baseUrl}/iletisim/`,
       lastModified: new Date(),
       changeFrequency: "monthly",
       priority: 0.4,
     },
     {
-      url: `${baseUrl}/topluluk-kurallari`,
+      url: `${baseUrl}/topluluk-kurallari/`,
       lastModified: new Date(),
       changeFrequency: "monthly",
       priority: 0.3,
     },
     {
-      url: `${baseUrl}/kvkk`,
+      url: `${baseUrl}/kvkk/`,
       lastModified: new Date(),
       changeFrequency: "monthly",
       priority: 0.3,
     },
     {
-      url: `${baseUrl}/harita`,
+      url: `${baseUrl}/harita/`,
       lastModified: new Date(),
       changeFrequency: "weekly",
       priority: 0.5,
     },
     {
-      url: `${baseUrl}/mesajlar`,
+      url: `${baseUrl}/mesajlar/`,
       lastModified: new Date(),
       changeFrequency: "weekly",
       priority: 0.5,
     },
     {
-      url: `${baseUrl}/profil`,
+      url: `${baseUrl}/profil/`,
       lastModified: new Date(),
       changeFrequency: "weekly",
       priority: 0.5,
     },
     {
-      url: `${baseUrl}/yardim-merkezi`,
+      url: `${baseUrl}/yardim-merkezi/`,
       lastModified: new Date(),
       changeFrequency: "monthly",
       priority: 0.4,
+    },
+    {
+      url: `${baseUrl}/hesap-silme/`,
+      lastModified: new Date(),
+      changeFrequency: "monthly",
+      priority: 0.3,
     },
   ];
 
   const cityRoutes: MetadataRoute.Sitemap = CITIES.map((city) => ({
-    url: `${baseUrl}/${slugify(city)}`,
+    url: `${baseUrl}/${slugify(city)}/`,
     lastModified: new Date(),
     changeFrequency: "daily",
     priority: 0.8,
@@ -82,7 +88,7 @@ export default function sitemap(): MetadataRoute.Sitemap {
     const districts = TURKEY_DATA[city] || [];
     districts.forEach((district) => {
       districtRoutes.push({
-        url: `${baseUrl}/${citySlug}/${slugify(district)}`,
+        url: `${baseUrl}/${citySlug}/${slugify(district)}/`,
         lastModified: new Date(),
         changeFrequency: "daily",
         priority: 0.6,

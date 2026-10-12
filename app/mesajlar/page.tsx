@@ -124,8 +124,85 @@ export default function MesajlarPage() {
     const txt = newMessage;
     setNewMessage("");
     try {
-      await addDoc(collection(db, 'chats', activeChat.id, 'messages'), { senderId: user.uid, text: txt, timestamp: serverTimestamp(), type: 'text' });
-      await updateDoc(doc(db, 'chats', activeChat.id), { lastMessage: txt, lastMessageTime: serverTimestamp(), lastMessageSenderId: user.uid });
+      const messageData = {
+        senderId: user.uid,
+        text: txt,
+        message: txt, // Mobil uygulama için
+        timestamp: serverTimestamp(),
+        createdAt: serverTimestamp(), // Mobil uygulama için
+        type: 'text',
+        isRead: false
+      };
+
+      await addDoc(collection(db, 'chats', activeChat.id, 'messages'), messageData);
+
+      await updateDoc(doc(db, 'chats', activeChat.id), {
+        lastMessage: txt,
+        lastMessageTime: serverTimestamp(),
+        lastMessageSenderId: user.uid,
+        senderName: user.displayName || "Bir Üye",
+        senderPhoto: user.photoURL || null,
+        [`unreadCount.${activeChat.otherUser?.id}`]: (activeChat.unreadCount?.[activeChat.otherUser?.id || ''] || 0) + 1
+      });
+
+      // Mobil Bildirim Gönder (Hem bildirimler hem de push_notifications koleksiyonuna ekleyerek)
+      if (activeChat.otherUser?.id) {
+        const recipientId = activeChat.otherUser.id;
+        const senderName = user.displayName || "Bir Üye";
+        const title = senderName;
+        const body = txt.length > 100 ? `${txt.substring(0, 97)}...` : txt;
+
+        const notifData = {
+          recipientId: recipientId,
+          receiverId: recipientId,
+          senderId: user.uid,
+          senderName: senderName,
+          senderPhoto: user.photoURL || null,
+          type: 'chat_message',
+          title: title,
+          body: body,
+          message: txt,
+          chatId: activeChat.id,
+          timestamp: serverTimestamp(),
+          createdAt: serverTimestamp(),
+          read: false,
+          isRead: false,
+          data: {
+            screen: 'chat',
+            chatId: activeChat.id,
+            senderId: user.uid,
+            senderName: senderName,
+            click_action: 'FLUTTER_NOTIFICATION_CLICK',
+            status: 'done',
+          }
+        };
+
+        // 1. Uygulama içi bildirim listesi için
+        await addDoc(collection(db, 'notifications'), notifData);
+
+        // 2. FCM Cloud Function tetiklemesi için
+        await addDoc(collection(db, 'push_notifications'), {
+          ...notifData,
+          priority: 'high',
+          visibility: 'public',
+          content_available: true,
+          notification: {
+            title: title,
+            body: body,
+            sound: null,
+            badge: '1',
+          },
+          android: {
+            priority: 'high',
+            notification: {
+              channel_id: 'high_importance_channel_v3',
+              sound: null,
+              visibility: 'public',
+              click_action: 'FLUTTER_NOTIFICATION_CLICK',
+            }
+          }
+        });
+      }
     } catch (e) { console.error(e); }
   };
 
@@ -146,19 +223,19 @@ export default function MesajlarPage() {
     } catch (e) { console.error(e); }
   };
 
-  if (loading) return <div className="min-h-screen bg-black flex items-center justify-center"><div className="w-10 h-10 border-4 border-[#ff2d55] border-t-transparent rounded-full animate-spin"></div></div>;
+  if (loading) return <div className="min-h-screen bg-black flex items-center justify-center"><div className="w-10 h-10 border-4 border-[#d4af37] border-t-transparent rounded-full animate-spin"></div></div>;
 
   if (!user) return (
     <div className="min-h-screen bg-black text-white flex flex-col items-center justify-center p-6 text-center">
       <div className="w-20 h-20 bg-[#1a1a1a] rounded-full flex items-center justify-center mb-8 text-4xl opacity-20">💬</div>
       <h1 className="text-3xl font-black uppercase tracking-tighter mb-4">GİRİŞ GEREKLİ</h1>
       <p className="text-gray-500 max-w-xs mx-auto mb-10 text-sm font-medium">Mesajlarınıza erişmek ve sosyal ağa katılmak için giriş yapmalısınız.</p>
-      <a href="/" className="px-10 py-4 bg-[#ff2d55] rounded-2xl font-black text-[10px] uppercase tracking-[0.2em] hover:scale-105 transition-all shadow-xl shadow-[#ff2d55]/20">ANA SAYFAYA DÖN</a>
+      <a href="/" className="px-10 py-4 bg-[#d4af37] rounded-2xl font-black text-[10px] uppercase tracking-[0.2em] hover:scale-105 transition-all shadow-xl shadow-[#d4af37]/20">ANA SAYFAYA DÖN</a>
     </div>
   );
 
   return (
-    <div className="min-h-screen bg-black text-white selection:bg-[#ff2d55]/30">
+    <div className="min-h-screen bg-black text-white selection:bg-[#d4af37]/30">
       <div className="max-w-6xl mx-auto px-4 py-8 h-[90vh] flex gap-6">
         {/* SOL: SOHBET LİSTESİ */}
         <div className={`flex-col ${activeChat ? 'hidden lg:flex' : 'flex'} w-full lg:w-[400px] bg-[#0a0a0a] rounded-[2.5rem] border border-[#1a1a1a] overflow-hidden shadow-2xl`}>
@@ -179,13 +256,13 @@ export default function MesajlarPage() {
                   onClick={() => setActiveChat(c)}
                   className={`p-5 rounded-3xl cursor-pointer transition-all border flex items-center gap-4 ${
                     activeChat?.id === c.id
-                      ? 'bg-[#ff2d55]/10 border-[#ff2d55]/30 shadow-lg shadow-[#ff2d55]/5'
+                      ? 'bg-[#d4af37]/10 border-[#d4af37]/30 shadow-lg shadow-[#d4af37]/5'
                       : 'bg-[#111]/40 border-transparent hover:bg-[#111] hover:border-white/5'
                   }`}
                 >
                   <div className="relative w-16 h-16 rounded-2xl bg-[#050505] border border-white/5 overflow-hidden flex-shrink-0">
                     {c.otherUser?.image ? <img src={c.otherUser.image} className="w-full h-full object-cover" /> : <span className="m-auto opacity-10 text-3xl flex h-full items-center justify-center">👤</span>}
-                    {c.isRequest && <div className="absolute top-0 right-0 w-3.5 h-3.5 bg-amber-500 rounded-full border-[3px] border-black" title="Yeni İstek"></div>}
+                    {c.isRequest && <div className="absolute top-0 right-0 w-3.5 h-3.5 bg-[#d4af37] rounded-full border-[3px] border-black" title="Yeni İstek"></div>}
                   </div>
                   <div className="flex-1 min-w-0">
                     <div className="flex justify-between items-start mb-1">
@@ -194,7 +271,7 @@ export default function MesajlarPage() {
                     </div>
                     <p className={`text-[10px] truncate leading-relaxed ${c.unreadCount?.[user.uid] > 0 ? 'text-white font-black' : 'text-gray-500 font-medium'}`}>{c.lastMessage}</p>
                   </div>
-                  {c.unreadCount?.[user.uid] > 0 && <div className="w-5 h-5 bg-[#ff2d55] rounded-full text-[9px] font-black text-white flex items-center justify-center animate-pulse">{c.unreadCount[user.uid]}</div>}
+                  {c.unreadCount?.[user.uid] > 0 && <div className="w-5 h-5 bg-[#d4af37] rounded-full text-[9px] font-black text-black flex items-center justify-center animate-pulse">{c.unreadCount[user.uid]}</div>}
                 </div>
               ))
             )}
@@ -216,7 +293,7 @@ export default function MesajlarPage() {
               {/* Chat Header */}
               <div className="p-6 border-b border-[#1a1a1a] flex items-center justify-between bg-gradient-to-b from-white/[0.02] to-transparent">
                 <div className="flex items-center gap-4">
-                  <button onClick={() => setActiveChat(null)} className="lg:hidden text-2xl p-2 -ml-2 hover:text-[#ff2d55] transition-colors">←</button>
+                  <button onClick={() => setActiveChat(null)} className="lg:hidden text-2xl p-2 -ml-2 hover:text-[#d4af37] transition-colors">←</button>
                   <div className="w-12 h-12 rounded-2xl bg-[#050505] border border-white/5 overflow-hidden">
                     {activeChat.otherUser?.image ? <img src={activeChat.otherUser.image} className="w-full h-full object-cover" /> : <span className="flex items-center justify-center h-full opacity-20">👤</span>}
                   </div>
@@ -236,14 +313,14 @@ export default function MesajlarPage() {
               <div className="flex-1 overflow-y-auto p-8 space-y-6 custom-scrollbar bg-[url('https://www.transparenttextures.com/patterns/carbon-fibre.png')] bg-fixed opacity-95">
                 {activeChat.isRequest ? (
                   <div className="h-full flex flex-col items-center justify-center text-center">
-                    <div className="p-10 bg-amber-500/5 rounded-[3rem] border border-amber-500/20 max-w-sm backdrop-blur-xl">
-                      <div className="w-16 h-16 bg-amber-500/10 rounded-full flex items-center justify-center text-2xl text-amber-500 mx-auto mb-6">✉️</div>
-                      <h3 className="text-amber-500 font-black mb-2 uppercase tracking-tighter text-lg">YENİ MESAJ İSTEĞİ</h3>
+                    <div className="p-10 bg-[#d4af37]/5 rounded-[3rem] border border-[#d4af37]/20 max-w-sm backdrop-blur-xl">
+                      <div className="w-16 h-16 bg-[#d4af37]/10 rounded-full flex items-center justify-center text-2xl text-[#d4af37] mx-auto mb-6">✉️</div>
+                      <h3 className="text-[#d4af37] font-black mb-2 uppercase tracking-tighter text-lg">YENİ MESAJ İSTEĞİ</h3>
                       <p className="text-[11px] text-gray-500 mb-8 font-medium leading-relaxed">Bu kullanıcı sizinle sosyal bir etkinlik veya refakat planı için iletişime geçmek istiyor.</p>
                       <div className="bg-black/60 p-5 rounded-2xl text-white italic text-xs mb-10 border border-white/5 shadow-inner leading-relaxed">"{activeChat.lastMessage}"</div>
                       <button
                         onClick={() => acceptRequest(activeChat)}
-                        className="w-full py-5 bg-amber-500 text-black font-black rounded-2xl hover:bg-amber-400 hover:scale-[1.02] transition-all shadow-xl shadow-amber-500/20 uppercase text-[10px] tracking-widest"
+                        className="w-full py-5 bg-[#d4af37] text-black font-black rounded-2xl hover:bg-[#d4af37] hover:scale-[1.02] transition-all shadow-xl shadow-[#d4af37]/20 uppercase text-[10px] tracking-widest"
                       >
                         İSTEĞİ KABUL ET VE YAZIŞ
                       </button>
@@ -261,10 +338,10 @@ export default function MesajlarPage() {
                         <div className={`max-w-[70%] group`}>
                           <div className={`p-4 rounded-[1.8rem] text-xs font-medium shadow-2xl relative ${
                             m.senderId === user.uid
-                              ? 'bg-[#ff2d55] text-white rounded-tr-none shadow-[#ff2d55]/10'
+                              ? 'bg-[#d4af37] text-black rounded-tr-none shadow-[#d4af37]/10'
                               : 'bg-[#1a1a1a] text-gray-200 rounded-tl-none border border-white/5'
                           }`}>
-                            {m.text}
+                            {m.text || (m as any).message}
                           </div>
                           <div className={`text-[8px] font-black text-gray-600 mt-2 uppercase tracking-widest ${m.senderId === user.uid ? 'text-right' : 'text-left'}`}>
                             {m.timestamp instanceof Timestamp ? new Date(m.timestamp.toMillis()).toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'}) : 'Gönderiliyor...'}
@@ -281,18 +358,18 @@ export default function MesajlarPage() {
               {!activeChat.isRequest && (
                 <div className="p-6 border-t border-[#1a1a1a] bg-gradient-to-t from-white/[0.02] to-transparent">
                   <div className="flex gap-4 mb-4 overflow-x-auto pb-2 no-scrollbar">
-                    <a href="https://play.google.com/store" target="_blank" className="flex-shrink-0 flex items-center gap-2 px-4 py-2 rounded-xl bg-white/5 border border-white/10 text-[9px] font-black text-gray-400 hover:text-white hover:bg-[#ff2d55]/20 hover:border-[#ff2d55]/30 transition-all uppercase tracking-widest">
+                    <a href="https://play.google.com/store" target="_blank" className="flex-shrink-0 flex items-center gap-2 px-4 py-2 rounded-xl bg-white/5 border border-white/10 text-[9px] font-black text-gray-400 hover:text-white hover:bg-[#d4af37]/20 hover:border-[#d4af37]/30 transition-all uppercase tracking-widest">
                       🎤 Sesli Mesaj
                     </a>
                     <a href="https://play.google.com/store" target="_blank" className="flex-shrink-0 flex items-center gap-2 px-4 py-2 rounded-xl bg-white/5 border border-white/10 text-[9px] font-black text-gray-400 hover:text-white hover:bg-blue-500/20 hover:border-blue-500/30 transition-all uppercase tracking-widest">
                       📍 Konum Paylaş
                     </a>
-                    <a href="https://play.google.com/store" target="_blank" className="flex-shrink-0 flex items-center gap-2 px-4 py-2 rounded-xl bg-white/5 border border-white/10 text-[9px] font-black text-gray-400 hover:text-white hover:bg-amber-500/20 hover:border-amber-500/30 transition-all uppercase tracking-widest">
+                    <a href="https://play.google.com/store" target="_blank" className="flex-shrink-0 flex items-center gap-2 px-4 py-2 rounded-xl bg-white/5 border border-white/10 text-[9px] font-black text-gray-400 hover:text-white hover:bg-[#d4af37]/20 hover:border-[#d4af37]/30 transition-all uppercase tracking-widest">
                       🎁 Hediye
                     </a>
                   </div>
 
-                  <div className="flex gap-3 bg-[#111] border border-[#222] rounded-[1.5rem] p-1.5 focus-within:border-[#ff2d55]/50 transition-colors shadow-inner">
+                  <div className="flex gap-3 bg-[#111] border border-[#222] rounded-[1.5rem] p-1.5 focus-within:border-[#d4af37]/50 transition-colors shadow-inner">
                     <input
                       type="text" value={newMessage} onChange={e => setNewMessage(e.target.value)} onKeyDown={e => e.key === 'Enter' && sendMessage()}
                       placeholder="Mesajınızı buraya yazın..."
@@ -300,7 +377,7 @@ export default function MesajlarPage() {
                     />
                     <button
                       onClick={sendMessage}
-                      className="w-14 h-14 bg-[#ff2d55] rounded-2xl flex items-center justify-center text-white shadow-lg shadow-[#ff2d55]/20 hover:scale-105 active:scale-95 transition-all"
+                      className="w-14 h-14 bg-[#d4af37] rounded-2xl flex items-center justify-center text-white shadow-lg shadow-[#d4af37]/20 hover:scale-105 active:scale-95 transition-all"
                     >
                       <svg className="w-5 h-5" fill="none" stroke="currentColor" strokeWidth="2.5" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M13 7l5 5m0 0l-5 5m5-5H6" /></svg>
                     </button>

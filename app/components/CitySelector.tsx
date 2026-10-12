@@ -52,17 +52,19 @@ export default function CitySelector({ currentCity, currentDistrict }: { current
 
   return (
     <div className="space-y-6">
-      <div className="flex flex-col sm:flex-row items-center justify-between gap-4 bg-gradient-to-r from-[#0d0d0d] to-[#121212] p-4 rounded-2xl border border-[#222]">
-        <div className="flex items-center gap-3">
-          <span className="text-xl">📍</span>
+      <div className="flex flex-col sm:flex-row items-center justify-between gap-6 bg-[#0a0a0a] p-6 md:p-8 rounded-[2.5rem] border border-white/5 shadow-2xl">
+        <div className="flex items-center gap-4">
+          <div className="w-12 h-12 rounded-2xl bg-[#d4af37]/10 border border-[#d4af37]/20 flex items-center justify-center text-xl text-[#d4af37]">
+            📍
+          </div>
           <div>
-            <div className="text-[10px] font-black text-gray-500 uppercase tracking-widest">Mevcut Konum</div>
-            <div className="text-sm font-black uppercase text-white tracking-wider">
+            <div className="text-[10px] font-black text-white/30 uppercase tracking-[0.25em] mb-0.5">Seçili Bölge</div>
+            <div className="text-base font-black uppercase text-white tracking-wider">
               {activeCityName ? (
                 <>
-                  <span className="text-[#ff2d55]">{activeCityName}</span>
+                  <span className="text-[#d4af37]">{activeCityName}</span>
                   {selectedDistrictSlug && (
-                    <span className="text-gray-400 font-medium"> / {districts.find(d => slugify(d) === selectedDistrictSlug)?.toUpperCase() || selectedDistrictSlug.toUpperCase()}</span>
+                    <span className="text-white/40 font-light"> / {districts.find(d => slugify(d) === selectedDistrictSlug)?.toUpperCase() || selectedDistrictSlug.toUpperCase()}</span>
                   )}
                 </>
               ) : (
@@ -72,12 +74,12 @@ export default function CitySelector({ currentCity, currentDistrict }: { current
           </div>
         </div>
 
-        <div className="w-full sm:w-auto flex flex-col sm:flex-row gap-3">
-          <div className="relative min-w-[160px] w-full sm:w-auto">
+        <div className="w-full sm:w-auto flex flex-col sm:flex-row gap-4 items-center">
+          <div className="relative min-w-[180px] w-full sm:w-auto">
             <select
               value={selectedCitySlug}
               onChange={(e) => handleCityChange(e.target.value)}
-              className="w-full appearance-none px-4 py-3 rounded-xl bg-black border border-[#222] text-[11px] font-black uppercase tracking-wider text-white pr-10 focus:outline-none focus:border-[#ff2d55] cursor-pointer transition-colors"
+              className="w-full appearance-none px-6 py-4 rounded-xl bg-black/60 border border-white/10 text-[11px] font-black uppercase tracking-widest text-white pr-12 focus:outline-none focus:border-[#d4af37] cursor-pointer transition-colors"
             >
               <option value="all">🌍 TÜM TÜRKİYE</option>
               {CITIES.map((city) => (
@@ -86,17 +88,17 @@ export default function CitySelector({ currentCity, currentDistrict }: { current
                 </option>
               ))}
             </select>
-            <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center px-3 text-gray-500 text-xs">
+            <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center px-4 text-white/30 text-[10px]">
               ▼
             </div>
           </div>
 
           {activeCityName && districts.length > 0 && (
-            <div className="relative min-w-[160px] w-full sm:w-auto">
+            <div className="relative min-w-[180px] w-full sm:w-auto">
               <select
                 value={selectedDistrictSlug}
                 onChange={(e) => handleDistrictChange(e.target.value)}
-                className="w-full appearance-none px-4 py-3 rounded-xl bg-black border border-[#222] text-[11px] font-black uppercase tracking-wider text-white pr-10 focus:outline-none focus:border-[#ff2d55] cursor-pointer transition-colors"
+                className="w-full appearance-none px-6 py-4 rounded-xl bg-black/60 border border-white/10 text-[11px] font-black uppercase tracking-widest text-white pr-12 focus:outline-none focus:border-[#d4af37] cursor-pointer transition-colors"
               >
                 <option value="">🔹 TÜM İLÇELER</option>
                 {districts.map((district) => (
@@ -105,7 +107,7 @@ export default function CitySelector({ currentCity, currentDistrict }: { current
                   </option>
                 ))}
               </select>
-              <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center px-3 text-gray-500 text-xs">
+              <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center px-4 text-white/30 text-[10px]">
                 ▼
               </div>
             </div>
@@ -113,9 +115,9 @@ export default function CitySelector({ currentCity, currentDistrict }: { current
 
           <button
             onClick={() => setIsOpen(true)}
-            className="px-5 py-3 rounded-xl bg-[#141414] border border-[#222] text-[10px] font-black uppercase tracking-widest text-gray-300 hover:text-white hover:border-[#ff2d55] transition-all"
+            className="w-full sm:w-auto px-6 py-4 rounded-xl bg-white/[0.03] border border-white/10 text-[10px] font-black uppercase tracking-widest text-white/80 hover:text-white hover:bg-white/5 hover:border-[#d4af37] transition-all cursor-pointer"
           >
-            Arama Yap 🔍
+            HIZLI ARAMA 🔍
           </button>
         </div>
       </div>
@@ -123,56 +125,56 @@ export default function CitySelector({ currentCity, currentDistrict }: { current
       {isOpen && (
         <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 sm:p-6 md:p-10 overflow-hidden">
           <div
-            className="absolute inset-0 bg-black/85 backdrop-blur-2xl transition-opacity animate-fadeIn"
+            className="absolute inset-0 bg-black/90 backdrop-blur-3xl transition-opacity"
             onClick={() => { setIsOpen(false); setSearchQuery(""); }}
           />
 
-          <div className="relative w-full max-w-4xl max-h-[85vh] flex flex-col rounded-[2.5rem] bg-[#0a0a0a] border border-[#222] shadow-2xl shadow-black/80 overflow-hidden z-10 animate-scaleUp">
-            <div className="p-6 md:p-8 border-b border-[#1a1a1a] bg-gradient-to-b from-[#111] to-[#0a0a0a] space-y-4">
+          <div className="relative w-full max-w-4xl max-h-[85vh] flex flex-col rounded-[3.5rem] bg-[#050505] border border-white/5 shadow-2xl overflow-hidden z-10">
+            <div className="p-8 md:p-12 border-b border-white/5 bg-[#0a0a0a] space-y-6">
               <div className="flex items-center justify-between">
-                <div className="flex items-center gap-3">
+                <div className="flex items-center gap-4">
                   <span className="text-2xl">🌍</span>
-                  <h3 className="text-xl font-black uppercase tracking-tighter text-white">
-                    Premium Konum Seçimi
+                  <h3 className="text-2xl font-black uppercase tracking-tighter text-white">
+                    PREMIUM LOKASYON MERKEZİ
                   </h3>
                 </div>
                 <button
                   onClick={() => { setIsOpen(false); setSearchQuery(""); }}
-                  className="h-10 w-10 flex items-center justify-center rounded-full bg-[#1a1a1a] text-gray-400 hover:text-white hover:bg-[#ff2d55] transition-all font-black text-sm"
+                  className="h-12 w-12 flex items-center justify-center rounded-full bg-white/5 text-white/40 hover:text-black hover:bg-[#d4af37] transition-all font-black text-sm cursor-pointer"
                 >
                   ✕
                 </button>
               </div>
 
               <div className="relative">
-                <span className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-500 text-sm">🔍</span>
+                <span className="absolute left-5 top-1/2 -translate-y-1/2 text-white/30 text-base">🔍</span>
                 <input
                   type="text"
                   placeholder="Şehir adı arayın (Örn: Alanya, İstanbul, İzmir...)"
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
-                  className="w-full pl-12 pr-4 py-4 rounded-xl bg-black border border-[#222] text-sm text-white placeholder-gray-600 focus:outline-none focus:border-[#ff2d55] transition-colors font-bold uppercase tracking-wider"
+                  className="w-full pl-14 pr-6 py-5 rounded-2xl bg-black border border-white/10 text-base text-white placeholder-white/20 focus:outline-none focus:border-[#d4af37] transition-colors font-bold uppercase tracking-wider"
                   autoFocus
                 />
               </div>
             </div>
 
-            <div className="flex-1 overflow-y-auto p-6 md:p-8 space-y-8 custom-scrollbar">
+            <div className="flex-1 overflow-y-auto p-8 md:p-12 space-y-10 custom-scrollbar">
               {!searchQuery && (
-                <div className="space-y-3">
-                  <div className="text-[10px] font-black text-[#ff2d55] uppercase tracking-[0.3em]">
-                    🔥 POPÜLER SOSYAL REFAKAT BÖLGELERİ
+                <div className="space-y-4">
+                  <div className="text-[10px] font-black text-[#d4af37] uppercase tracking-[0.4em]">
+                    ✨ SEÇKİN POPÜLER BÖLGELER
                   </div>
-                  <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-3">
+                  <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-4">
                     <button
                       onClick={() => handleCityChange("all")}
-                      className={`rounded-xl border p-4 text-[10px] font-black tracking-widest text-center transition-all ${
+                      className={`rounded-xl border p-5 text-[11px] font-black tracking-widest text-center transition-all cursor-pointer ${
                         selectedCitySlug === "all"
-                          ? "border-[#ff2d55] bg-[#ff2d55]/10 text-white shadow-lg"
-                          : "border-[#1a1a1a] bg-black text-gray-400 hover:border-[#ff2d55]/40 hover:text-white"
+                          ? "border-[#d4af37] bg-[#d4af37]/10 text-[#d4af37] shadow-xl"
+                          : "border-white/5 bg-black text-white/50 hover:border-[#d4af37]/40 hover:text-white"
                       }`}
                     >
-                      🌟 TÜM TÜRKİYE
+                      TÜM TÜRKİYE
                     </button>
                     {POPULAR_CITIES.map(city => {
                       const citySlug = slugify(city);
@@ -181,13 +183,13 @@ export default function CitySelector({ currentCity, currentDistrict }: { current
                         <button
                           key={city}
                           onClick={() => handleCityChange(citySlug)}
-                          className={`rounded-xl border p-4 text-[10px] font-black tracking-widest text-center transition-all ${
+                          className={`rounded-xl border p-5 text-[11px] font-black tracking-widest text-center transition-all cursor-pointer ${
                             isSelected
-                              ? "border-[#ff2d55] bg-[#ff2d55]/10 text-white shadow-lg"
-                              : "border-[#1a1a1a] bg-black text-gray-400 hover:border-[#ff2d55]/40 hover:text-white"
+                              ? "border-[#d4af37] bg-[#d4af37]/10 text-[#d4af37] shadow-xl"
+                              : "border-white/5 bg-black text-white/50 hover:border-[#d4af37]/40 hover:text-white"
                           }`}
                         >
-                          📍 {city}
+                          {city}
                         </button>
                       );
                     })}
@@ -195,12 +197,12 @@ export default function CitySelector({ currentCity, currentDistrict }: { current
                 </div>
               )}
 
-              <div className="space-y-3">
-                <div className="text-[10px] font-black text-gray-500 uppercase tracking-[0.3em]">
-                  {searchQuery ? `🔍 ARAMA SONUÇLARI (${filteredCities.length})` : "🗺️ TÜM ŞEHİRLER (A-Z)"}
+              <div className="space-y-4">
+                <div className="text-[10px] font-black text-white/30 uppercase tracking-[0.4em]">
+                  {searchQuery ? `ARAMA SONUÇLARI (${filteredCities.length})` : "TÜM ŞEHİRLER (A-Z)"}
                 </div>
                 {filteredCities.length > 0 ? (
-                  <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-2">
+                  <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3">
                     {filteredCities.map(city => {
                       const citySlug = slugify(city);
                       const isSelected = selectedCitySlug === citySlug;
@@ -208,10 +210,10 @@ export default function CitySelector({ currentCity, currentDistrict }: { current
                         <button
                           key={city}
                           onClick={() => handleCityChange(citySlug)}
-                          className={`rounded-xl border px-4 py-3 text-[10px] font-black uppercase tracking-wider text-left transition-all ${
+                          className={`rounded-xl border px-5 py-4 text-[11px] font-black uppercase tracking-wider text-left transition-all cursor-pointer ${
                             isSelected
-                              ? "border-[#ff2d55] bg-[#ff2d55]/10 text-white shadow-md"
-                              : "border-[#141414] bg-black/40 text-gray-500 hover:border-gray-700 hover:text-gray-200"
+                              ? "border-[#d4af37] bg-[#d4af37]/10 text-[#d4af37] shadow-md"
+                              : "border-white/5 bg-black/40 text-white/40 hover:border-white/20 hover:text-white"
                           }`}
                         >
                           {city}
@@ -220,15 +222,15 @@ export default function CitySelector({ currentCity, currentDistrict }: { current
                     })}
                   </div>
                 ) : (
-                  <div className="text-center py-10 text-xs font-bold text-gray-600 uppercase tracking-widest">
+                  <div className="text-center py-12 text-sm font-medium text-white/20 uppercase tracking-widest">
                     Aradığınız kriterlere uygun şehir bulunamadı.
                   </div>
                 )}
               </div>
             </div>
 
-            <div className="p-4 border-t border-[#1a1a1a] bg-black text-center text-[9px] font-bold text-gray-600 uppercase tracking-widest">
-              Platformumuz kesinlikle eskort sitesi değildir. Sadece elit sosyal refakat ilanları barındırır.
+            <div className="p-6 border-t border-white/5 bg-black text-center text-[10px] font-black text-white/20 uppercase tracking-[0.2em]">
+              PREMIUM SOSYAL REFAKAT VE REFAKATÇİ TOPLULUĞU
             </div>
           </div>
         </div>

@@ -1,11 +1,12 @@
 import { Metadata } from "next";
+import { absoluteUrl } from "@/lib/site";
 
 export const metadata: Metadata = {
   title: "Kullanım Şartları | Kiralık Sevgili",
   description:
     "Kiralık Sevgili platformu kullanım şartları. Sosyal refakat kuralları, güvenlik politikaları ve yasal uyarılar.",
   alternates: {
-    canonical: "https://kiraliksevgili.net/kullanim-sartlari",
+    canonical: absoluteUrl("/kullanim-sartlari"),
   },
 };
 
@@ -15,13 +16,13 @@ export default function KullanimSartlari() {
       <div className="mx-auto max-w-4xl px-6 py-16">
         <a
           href="/"
-          className="text-sm font-black uppercase tracking-widest text-[#ff2d55] hover:text-white transition-colors"
+          className="text-sm font-black uppercase tracking-widest text-[#d4af37] hover:text-white transition-colors"
         >
           ← GERİ DÖN
         </a>
 
         <h1 className="mt-8 text-4xl font-black tracking-tighter uppercase">
-          Kullanım <span className="premium-gradient-text">Şartları</span>
+          Kullanım <span className="text-transparent bg-clip-text bg-gradient-to-r from-[#d4af37] via-[#f3e5ab] to-[#d4af37]">Şartları</span>
         </h1>
 
         <p className="mt-5 leading-8 text-gray-400 font-medium">
@@ -117,7 +118,7 @@ export default function KullanimSartlari() {
         <div className="mt-16 border-t border-[#1a1a1a] pt-12">
           <a
             href="/"
-            className="text-[10px] font-black uppercase tracking-[0.3em] text-gray-500 hover:text-[#ff2d55] transition-colors"
+            className="text-[10px] font-black uppercase tracking-[0.3em] text-gray-500 hover:text-[#d4af37] transition-colors"
           >
             © 2025 KİRALIK SEVGİLİ
           </a>

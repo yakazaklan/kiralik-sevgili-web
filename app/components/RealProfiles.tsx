@@ -23,7 +23,9 @@ type UserProfile = {
   priceWeekly?: string;
   gender?: string;
   isApproved: boolean;
+  isInvisible?: boolean;
   role?: string;
+  level: 'diamond' | 'vip' | 'gold';
 };
 
 interface RealProfilesProps {
@@ -91,175 +93,179 @@ function normalizeString(str: string): string {
 }
 
 function ProfileCard({ profile }: { profile: UserProfile }) {
-  const isElite = profile.isElite;
   const genderNorm = normalizeString(profile.gender || "");
 
-  const isMale = genderNorm === "erkek" || genderNorm === "bay" || genderNorm === "male";
+  const isMale = genderNorm === "erkek" || genderNorm === "bay" || genderNorm === "male" || genderNorm === "e";
   const isCouple = genderNorm === "cift" || genderNorm === "couple" || genderNorm.includes("cift");
 
-  let themeClass = "bg-pink-500/20 border-pink-500/40 text-pink-500 shadow-[0_0_15px_rgba(236,72,153,0.3)]";
-  let genderIcon = "♀";
+  // Tier Mantığı: Diamond (Altın), VIP (Mavi), Gold (Yeşil)
+  const tierStyles = profile.level === 'diamond'
+    ? {
+        border: "border-[#d4af37]/40",
+        bg: "from-[#1a1405] via-[#050505] to-[#000000]",
+        accent: "text-[#d4af37]",
+        glow: "shadow-[0_0_80px_rgba(212,175,55,0.15)]",
+        hover: "group-hover:border-[#d4af37] group-hover:shadow-[0_0_120px_rgba(212,175,55,0.3)]",
+        badge: "bg-gradient-to-r from-[#d4af37] to-[#f9e5af] text-black font-black",
+        tag: "border-[#d4af37]/30 text-[#d4af37] bg-[#d4af37]/5",
+        overlay: "from-[#d4af37]/10 via-transparent to-transparent",
+        tick: "text-[#d4af37]"
+      }
+    : profile.level === 'vip'
+    ? {
+        border: "border-blue-500/30",
+        bg: "from-[#050a15] via-[#050505] to-[#000000]",
+        accent: "text-blue-400",
+        glow: "shadow-[0_0_50px_rgba(59,130,246,0.1)]",
+        hover: "group-hover:border-blue-400 group-hover:shadow-[0_0_80px_rgba(59,130,246,0.2)]",
+        badge: "bg-blue-500 text-white font-black",
+        tag: "border-blue-500/20 text-blue-400 bg-blue-500/5",
+        overlay: "from-blue-500/5 via-transparent to-transparent",
+        tick: "text-blue-500"
+      }
+    : {
+        border: "border-emerald-500/20",
+        bg: "from-[#05150a] via-[#050505] to-[#000000]",
+        accent: "text-emerald-400",
+        glow: "",
+        hover: "group-hover:border-emerald-500/50",
+        badge: "bg-emerald-500 text-white font-black",
+        tag: "border-emerald-500/20 text-emerald-400 bg-emerald-500/5",
+        overlay: "transparent",
+        tick: "text-emerald-500"
+      };
 
-  if (isMale) {
-    themeClass = "bg-blue-500/20 border-blue-500/40 text-blue-500 shadow-[0_0_15px_rgba(59,130,246,0.3)]";
-    genderIcon = "♂";
-  } else if (isCouple) {
-    themeClass = "bg-yellow-500/20 border-yellow-500/40 text-yellow-500 shadow-[0_0_15px_rgba(234,179,8,0.3)]";
-    genderIcon = "⚤";
-  }
+  const location = [profile.district, profile.city].filter(Boolean).join(", ");
+  const roomInfo = (profile as any).details?.roomType || (profile as any).room || (profile as any).details?.odaTipi || "Müsait";
 
-  const borderColor = isElite
-    ? (isCouple ? 'border-yellow-500/40' : 'border-[#d4af37]/40')
-    : 'border-white/5';
+  const levelBadgeLabel = {
+    diamond: "DIAMOND",
+    vip: "VIP",
+    gold: "GOLD"
+  };
+
+  // Cinsiyet İkonu ve Rengi
+  // Kadın: Pembe, Erkek: Mavi, Çift: Sarı
+  const genderIcons = {
+    kadin: { icon: "♀", color: "text-pink-500", bg: "bg-pink-500/10", border: "border-pink-500/20" },
+    erkek: { icon: "♂", color: "text-blue-500", bg: "bg-blue-500/10", border: "border-blue-500/20" },
+    cift: { icon: "⚤", color: "text-yellow-500", bg: "bg-yellow-500/10", border: "border-yellow-500/20" }
+  };
+
+  const currentGender = isCouple ? "cift" : isMale ? "erkek" : "kadin";
+  const gStyle = genderIcons[currentGender as keyof typeof genderIcons] || genderIcons.kadin;
 
   return (
     <Link
       href={`/profil/${profile.id}`}
-      className={`group relative flex flex-row h-[180px] md:h-[220px] w-full overflow-hidden rounded-2xl bg-[#0d0d0d] border ${borderColor} transition-all duration-500 hover:shadow-[0_0_30px_rgba(212,175,55,0.15)] hover:border-[#d4af37]/60 hover:-translate-y-1`}
+      className={`group relative flex flex-col md:flex-row w-full overflow-hidden rounded-[2rem] bg-[#050505] border ${tierStyles.border} transition-all duration-700 ${tierStyles.hover} ${tierStyles.glow} hover:-translate-y-1 p-3 gap-4`}
     >
-      {/* Cinsiyet Badge - Sağ Üst */}
-      <div className={`absolute top-3 right-3 z-30 w-8 h-8 rounded-xl flex items-center justify-center border backdrop-blur-md transition-all duration-300 group-hover:scale-110 ${themeClass}`}>
-        <span className="text-lg leading-none font-bold">{genderIcon}</span>
+      {/* Premium Ambient Light */}
+      <div className="absolute -right-20 -top-20 w-64 h-64 bg-[#d4af37]/5 rounded-full blur-[100px] pointer-events-none group-hover:bg-[#d4af37]/10 transition-colors duration-1000" />
+
+      {/* Image Area - Horizontal Layout (3 photos) */}
+      <div className="relative flex-shrink-0 w-full md:w-[240px] h-[300px] md:h-[180px] flex gap-2">
+        {/* Main Photo */}
+        <div className="relative flex-[2] overflow-hidden rounded-2xl bg-[#0a0a0a]">
+          <img
+            src={profile.images[0] || "/placeholder.jpg"}
+            alt={profile.name}
+            referrerPolicy="no-referrer"
+            className="h-full w-full object-cover transition-transform duration-[3000ms] ease-out group-hover:scale-110"
+          />
+          <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent" />
+
+          {/* Status Tick */}
+          <div className="absolute bottom-3 left-3 flex items-center gap-1.5 z-20">
+            <div className={`w-5 h-5 rounded-full bg-white flex items-center justify-center shadow-lg`}>
+              <svg className={`w-3.5 h-3.5 ${tierStyles.tick}`} fill="currentColor" viewBox="0 0 20 20">
+                <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
+              </svg>
+            </div>
+          </div>
+        </div>
+
+        {/* Side Photos */}
+        <div className="flex flex-col gap-2 flex-1">
+          <div className="flex-1 overflow-hidden rounded-2xl bg-[#0a0a0a] border border-white/5">
+            <img
+              src={profile.images[1] || profile.images[0] || "/placeholder.jpg"}
+              className="h-full w-full object-cover transition-all duration-700 group-hover:scale-105"
+              alt=""
+            />
+          </div>
+          <div className="flex-1 overflow-hidden rounded-2xl bg-[#0a0a0a] border border-white/5 relative">
+            <img
+              src={profile.images[2] || profile.images[0] || "/placeholder.jpg"}
+              className="h-full w-full object-cover transition-all duration-700 group-hover:scale-105"
+              alt=""
+            />
+          </div>
+        </div>
       </div>
 
-      {/* Resim Alanı - Premium Çoklu Fotoğraf Düzeni */}
-      <div className="relative w-[150px] md:w-[200px] shrink-0 overflow-hidden bg-black flex gap-0.5">
-        {profile.images.length > 0 ? (
-          <>
-            <div className={`relative h-full ${profile.images.length > 1 ? 'w-2/3' : 'w-full'} overflow-hidden`}>
-              <img
-                src={profile.images[0]}
-                alt={profile.name}
-                referrerPolicy="no-referrer"
-                className="h-full w-full object-cover transition duration-700 ease-out group-hover:scale-110"
-                loading="lazy"
-              />
-              {/* Premium Efekti */}
-              <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent opacity-60"></div>
-            </div>
-            {profile.images.length > 1 && (
-              <div className="flex flex-col gap-0.5 w-1/3 h-full">
-                {profile.images.slice(1, 3).map((img, idx) => (
-                  <div key={idx} className="relative flex-1 overflow-hidden">
-                    <img
-                      src={img}
-                      alt={`${profile.name}-${idx}`}
-                      referrerPolicy="no-referrer"
-                      className="h-full w-full object-cover transition duration-700 ease-out group-hover:scale-110"
-                      loading="lazy"
-                    />
-                    <div className="absolute inset-0 bg-black/20 group-hover:bg-transparent transition-colors duration-500"></div>
-                  </div>
-                ))}
-                {profile.images.length === 2 && (
-                  <div className="flex-1 bg-[#111] flex items-center justify-center border-t border-white/5">
-                    <span className="text-[10px] font-black text-gray-700 tracking-tighter">GALLERY</span>
-                  </div>
+      {/* Information Area */}
+      <div className="flex flex-col justify-between flex-1 py-2 pr-2">
+        <div className="space-y-3">
+          <div className="flex items-start justify-between gap-4">
+            <div>
+              <div className="flex items-center gap-2 mb-1">
+                <span className={`text-[9px] font-black tracking-[0.25em] uppercase ${tierStyles.accent}`}>
+                  {levelBadgeLabel[profile.level]}
+                </span>
+                {profile.isActive && (
+                  <span className="flex items-center gap-1.5 bg-emerald-500/10 px-2.5 py-1 rounded-full">
+                    <span className="w-1 h-1 rounded-full bg-emerald-500 animate-pulse"></span>
+                    <span className="text-[8px] font-black text-emerald-500 tracking-widest uppercase">AKTİF</span>
+                  </span>
                 )}
               </div>
-            )}
-          </>
-        ) : (
-          <div className="flex h-full w-full items-center justify-center text-4xl opacity-20 bg-[#111]">👤</div>
-        )}
-
-        {/* Rozetler */}
-        <div className="absolute top-3 left-3 flex flex-col gap-1.5 z-10">
-          {isElite ? (
-            <div className={`backdrop-blur-md bg-black/60 border ${isCouple ? 'border-yellow-500/50' : 'border-[#d4af37]/50'} px-2 py-1 rounded-lg flex items-center gap-1.5 shadow-lg`}>
-              <span className={`w-1.5 h-1.5 rounded-full ${isCouple ? 'bg-yellow-500' : 'bg-[#d4af37]'} animate-pulse`}></span>
-              <span className={`text-[8px] font-black uppercase tracking-widest ${isCouple ? 'text-yellow-500' : 'text-[#d4af37]'}`}>PREMIUM ELITE</span>
+              <h3 className="text-lg font-black text-white uppercase tracking-tighter leading-none mb-1">
+                {profile.name ? `${profile.name[0]}.***` : 'PRIVATE'}
+                <span className="text-white/30 ml-2 font-medium italic text-[13px]">{profile.age}</span>
+              </h3>
             </div>
-          ) : profile.isVerified ? (
-            <div className="backdrop-blur-md bg-black/60 border border-green-500/50 px-2 py-1 rounded-lg flex items-center gap-1.5 shadow-lg">
-              <span className="w-1.5 h-1.5 rounded-full bg-green-500 animate-pulse"></span>
-              <span className="text-[8px] font-black uppercase tracking-widest text-green-500">ONAYLI</span>
-            </div>
-          ) : profile.isOrange ? (
-            <div className="backdrop-blur-md bg-black/60 border border-orange-500/50 px-2 py-1 rounded-lg flex items-center gap-1.5 shadow-lg">
-              <span className="w-1.5 h-1.5 rounded-full bg-orange-500 animate-pulse"></span>
-              <span className="text-[8px] font-black uppercase tracking-widest text-orange-500">ONAYLI</span>
-            </div>
-          ) : null}
-        </div>
-
-        {/* Fiyat Bilgisi */}
-        <div className="absolute bottom-3 left-3 z-10">
-          {profile.price && (
-            <div className={`backdrop-blur-md bg-black/80 border border-white/10 px-2.5 py-1 rounded-lg shadow-xl`}>
-              <span className="text-xs font-black tracking-tight text-white">₺{profile.price}</span>
-            </div>
-          )}
-        </div>
-
-        {/* Fotoğraf Gradyanı */}
-        <div className="absolute inset-0 bg-gradient-to-r from-transparent via-transparent to-[#0d0d0d]/40 pointer-events-none"></div>
-      </div>
-
-      {/* Bilgi Alanı */}
-      <div className="flex flex-col flex-1 p-4 md:p-6 justify-between relative min-w-0">
-        <div className="space-y-2">
-          <div className="flex items-start justify-between gap-3">
-            <div className="flex-1 min-w-0">
-              <div className="flex flex-col gap-0.5">
-                <h3 className="text-lg md:text-xl font-bold text-white group-hover:text-[#d4af37] transition-colors duration-300 uppercase truncate leading-tight">
-                  {profile.name ? `${profile.name[0]}.***` : 'Kullanıcı'}
-                  {isCouple && profile.name2 && (
-                    <span className="text-white/40 ml-2 text-sm font-medium">& {profile.name2[0]}.***</span>
-                  )}
-                </h3>
-                <div className="flex items-center gap-2">
-                  <span className="text-[10px] font-bold text-gray-500 uppercase tracking-wider">
-                    {profile.age} Yaş {isCouple && profile.age2 && `& ${profile.age2} Yaş`}
-                  </span>
-                  {profile.isActive && (
-                    <span className="flex items-center gap-1 px-1.5 py-0.5 rounded-full bg-green-500/10 border border-green-500/20">
-                      <span className="w-1 h-1 rounded-full bg-green-500 animate-pulse"></span>
-                      <span className="text-[7px] font-black text-green-500 uppercase">AKTİF</span>
-                    </span>
-                  )}
-                </div>
-              </div>
-
-              <div className="flex items-center text-[10px] font-bold text-[#d4af37] uppercase tracking-[0.1em] mt-2">
-                <span className="mr-1.5">📍</span>
-                <span className="truncate">
-                  {profile.district ? `${profile.district.toUpperCase()} • ` : ""}
-                  {profile.city?.toUpperCase() || "TÜRKİYE"}
-                </span>
-              </div>
+            <div className={`w-8 h-8 rounded-xl ${gStyle.bg} ${gStyle.border} border flex items-center justify-center text-lg transition-transform group-hover:rotate-12`}>
+              <span className={gStyle.color}>{gStyle.icon}</span>
             </div>
           </div>
 
-          <p className="text-xs leading-relaxed text-gray-400 font-medium italic line-clamp-2 mt-2 border-l-2 border-[#d4af37]/20 pl-3">
-            "{profile.bio}"
+          <div className="flex flex-col gap-1.5">
+            <div className="flex items-center gap-2 text-white/60">
+              <span className="text-xs">📍</span>
+              <span className="text-[10px] font-bold uppercase tracking-[0.15em]">{location}</span>
+            </div>
+            <div className="flex items-center gap-2 text-white/60">
+              <span className="text-xs">🏠</span>
+              <span className="text-[10px] font-bold uppercase tracking-[0.15em]">{roomInfo}</span>
+            </div>
+          </div>
+
+          <p className="text-[13px] leading-relaxed text-white/70 font-medium italic line-clamp-2 mt-3 border-t border-white/5 pt-3">
+            "{profile.bio || "Seçkin refakat ve sosyal eşlik hizmeti."}"
           </p>
         </div>
 
-        {/* Alt Kısım */}
-        <div className="flex items-center justify-between pt-4 border-t border-white/5">
-          <div className="flex items-center gap-4">
-            <span className="text-[8px] font-bold text-gray-600 uppercase tracking-widest">{profile.meetingCount > 0 ? `${profile.meetingCount}+ BULUŞMA` : 'YENİ İLAN'}</span>
+        <div className="flex items-center justify-between mt-4">
+          <div className="flex gap-2">
+             {profile.meetingCount > 0 && (
+               <div className={`bg-emerald-500/10 text-emerald-500 border border-emerald-500/20 px-3 py-1 rounded-full text-[8px] font-black tracking-widest uppercase`}>
+                 {profile.meetingCount}+ ONAYLI RANDEVU
+               </div>
+             )}
           </div>
 
-          <div className="flex items-center gap-2 text-[10px] font-black text-white group-hover:text-[#d4af37] transition-all duration-300 uppercase tracking-[0.2em]">
-            <span>PROFİLİ GÖR</span>
-            <span className="transform transition-transform duration-300 group-hover:translate-x-1">→</span>
+          <div className="flex items-center gap-2 text-[9px] font-black text-white/40 tracking-[0.2em] uppercase group-hover:text-white transition-colors">
+            DETAYLAR
+            <svg className="w-2.5 h-2.5 transform group-hover:translate-x-1 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="3" d="M9 5l7 7-7 7"/>
+            </svg>
           </div>
         </div>
-
-        {/* Premium Parlama Efekti */}
-        {isElite && (
-          <div className="absolute top-0 right-0 w-32 h-32 bg-[#d4af37]/5 blur-[60px] pointer-events-none opacity-0 group-hover:opacity-100 transition-opacity"></div>
-        )}
       </div>
     </Link>
   );
 }
-
-
-
-
 
 export default function RealProfiles({ filter, city, gender }: RealProfilesProps) {
   const [profiles, setProfiles] = useState<UserProfile[]>([]);
@@ -269,82 +275,112 @@ export default function RealProfiles({ filter, city, gender }: RealProfilesProps
     async function loadProfiles() {
       try {
         setLoading(true);
-        console.log("RealProfiles: Loading profiles for city:", city);
+        console.log("Firestore baglantisi kuruluyor...");
         const usersRef = collection(db, "users");
 
-        // Daha esnek sorgu: Onaylı tüm ilanları getir
-        const q = query(
-          usersRef
-        );
+        // Çoklu sorgu stratejisi: hasProfile ve isApproved alanlarının eksikliği nedeniyle
+        // dışarıda kalan ilanları yakalamak için sorguyu genişletiyoruz.
+        // hasProfile filtresini veritabanı seviyesinden kaldırıp istemci tarafına taşıyoruz.
+        const qApproved = query(usersRef, where("isApproved", "in", [true, "true"]));
+        const qStatusApproved = query(usersRef, where("status", "==", "approved"));
 
-        const snapshot = await getDocs(q);
-        console.log(`RealProfiles: Firestore returned ${snapshot.size} docs`);
+        // Belgeleri getir ve birleştir
+        const [snapApproved, snapStatus] = await Promise.all([
+          getDocs(qApproved),
+          getDocs(qStatusApproved)
+        ]);
 
-        const loadedProfiles: UserProfile[] = snapshot.docs.map((doc) => {
+        const allDocs = [...snapApproved.docs, ...snapStatus.docs];
+        const uniqueDocsMap = new Map();
+        allDocs.forEach(doc => uniqueDocsMap.set(doc.id, doc));
+        const uniqueDocs = Array.from(uniqueDocsMap.values());
+
+        console.log("Firestore'dan gelen toplam ham belge sayısı:", uniqueDocs.length);
+
+        const loadedProfiles: UserProfile[] = uniqueDocs.map((doc) => {
           const raw = doc.data() || {};
           const nested = (raw.profile && typeof raw.profile === "object") ? raw.profile : {};
           const data = { ...raw, ...nested };
 
           const rStatus = String(raw.status || "").toLowerCase().trim();
           const nStatus = String(nested.status || "").toLowerCase().trim();
-          const vStatus = String(raw.verificationStatus || "").toLowerCase().trim();
+          const role = String(data.role || nested.role || "").toLowerCase();
 
-          const hasApprovedStatus = (rStatus === "approved" || nStatus === "approved" || vStatus === "approved" || rStatus === "active" || nStatus === "active");
-          const hasApprovedFlag = (raw.isApproved === true || String(raw.isApproved) === "true" || nested.isApproved === true || String(nested.isApproved) === "true" || hasApprovedStatus);
-          const isBlacklisted =
-            ["rejected", "blocked", "banned"].includes(rStatus) ||
-            ["rejected", "blocked", "banned"].includes(nStatus);
+          // Onay durumunu Android ile eşzamanlı kontrol et
+          // Not: "active" durumu tek başına onay kanıtı sayılmamalı (kullanıcı isteği)
+          const isApproved = raw.isApproved === true || String(raw.isApproved) === "true" ||
+                            nested.isApproved === true || String(nested.isApproved) === "true" ||
+                            rStatus === "approved" || nStatus === "approved";
 
-          const finalApproved = (hasApprovedFlag || data.hasProfile === true) && !isBlacklisted;
+          // Sadece açıkça false ise pasif say, undefined ise aktif kabul et (Android uyumu)
+          const isExplicitlyPassive = raw.isActive === false || String(raw.isActive) === "false" ||
+                                     data.isActive === false || String(data.isActive) === "false" ||
+                                     ["rejected", "blocked", "banned"].includes(rStatus) ||
+                                     ["rejected", "blocked", "banned"].includes(nStatus);
+
+          // hasProfile alanı eksikse, profil verisi veya ismi varsa var kabul et
+          const hasProfile = raw.hasProfile === true || String(raw.hasProfile) === "true" ||
+                            data.hasProfile === true || String(data.hasProfile) === "true" ||
+                            (data.name && data.bio) || (getImages(data).length > 0);
 
           const rawVerified = data.isIdVerified ?? data.verified ?? data.isVerified ?? data.idVerified;
-          const isVerified = rawVerified === true || String(rawVerified) === "true" || String(data.verificationStatus).toLowerCase() === "verified";
-          const meetingCount = Number(data.meetingCount || 0);
+          const isVerified = rawVerified === true || String(rawVerified) === "true";
 
-          const isElite = finalApproved && isVerified && meetingCount >= 5;
-          const isOrange = finalApproved && !isVerified;
+          let level: 'diamond' | 'vip' | 'gold' = 'gold';
+          const rawLevel = String(data.level || data.listingTier || "").toLowerCase();
+          if (rawLevel === 'diamond') level = 'diamond';
+          else if (rawLevel === 'vip') level = 'vip';
 
-          const isActive = data.isActive === true || String(data.isActive) === "true" || data.status === "active";
-          const role = String(data.role || "").toLowerCase();
-          const images = getImages(data);
-
-          return {
+          const profileObj = {
             id: doc.id,
-            name: data.name || data.displayName || "Kullanıcı",
-            name2: data.name2 || data.displayName2,
+            name: data.name || data.displayName || data.username || "Gizli Üye",
             age: data.age ? String(data.age) : "",
-            age2: data.age2 ? String(data.age2) : undefined,
             city: data.city || data.sehir || "Türkiye",
             district: data.district || data.ilce || "",
             bio: data.bio || data.description || "Sosyal refakat ilanı.",
-            images: images,
+            images: getImages(data),
             isVerified,
-            isElite,
-            isOrange,
-            isActive: isActive,
-            isApproved: finalApproved,
-            meetingCount,
-            price: data.price || data.hourlyPrice || data.saatlikFiyat,
-            priceDaily: data.priceDaily || data.dailyPrice || data.gunlukFiyat,
-            priceWeekly: data.priceWeekly || data.weeklyPrice || data.haftalikFiyat,
-            gender: data.gender || data.cinsiyet || "Belirtilmemiş",
-            role: role
+            isElite: (level === 'diamond' || level === 'vip') && isVerified,
+            isOrange: isApproved && !isVerified,
+            isActive: !isExplicitlyPassive && (raw.deletedAt == null),
+            isApproved: isApproved && hasProfile,
+            isInvisible: data.isInvisible === true || String(data.isInvisible) === "true",
+            meetingCount: Number(data.meetingCount || 0),
+            price: data.price || data.hourlyPrice,
+            gender: data.gender || data.cinsiyet || "kadin",
+            role: role,
+            level
           };
+
+          return profileObj;
         }).filter(p => {
-          if (!p.isApproved && !p.isElite && !p.isVerified && !p.isOrange) return false;
-          const role = p.role || "";
-          return role === "" || role === "companion" || role === "refakatci" || role === "user" || role === "member";
+          // GÖRÜNME ŞARTI (Güvenlik ve Gizlilik Odaklı)
+          if (p.isInvisible) return false;
+          if (!p.isApproved) return false;
+          if (!p.isActive) return false;
+
+          // Rol Filtresi: Sadece companion ve türevlerini göster
+          const validRoles = ['companion', 'provider', 'model', 'escort', 'refakatçi', 'refakatci', 'refakat', 'agent', 'agency'];
+          // Eğer role alanı boşsa, onaylı profil olduğu için varsayılan olarak göster
+          const isCompanion = !p.role || p.role === "" || p.role === "user" || validRoles.some(r => p.role?.includes(r));
+
+          if (!isCompanion) return false;
+
+          // Çöp veri temizliği
+          if (p.name === "Gizli Üye" && p.images.length === 0) return false;
+
+          return true;
         });
 
-        console.log(`RealProfiles: ${loadedProfiles.length} profiles passed basic filters`);
 
         let filtered = loadedProfiles;
+        console.log("Filtreleme sonrasi ilan sayisi:", filtered.length);
+        console.log("Loaded profiles (companion/model):", filtered.length);
 
         if (gender !== "all") {
           const searchGender = normalizeString(gender);
           filtered = filtered.filter(p => {
-            if (!p.gender) return false;
-            const userGender = normalizeString(p.gender);
+            const userGender = normalizeString(p.gender || "");
             if (searchGender === "kadin") return userGender === "kadin" || userGender === "bayan" || userGender === "female";
             if (searchGender === "erkek") return userGender === "erkek" || userGender === "bay" || userGender === "male";
             if (searchGender === "cift") return userGender === "cift" || userGender === "couple";
@@ -357,33 +393,29 @@ export default function RealProfiles({ filter, city, gender }: RealProfilesProps
 
         if (city !== "all") {
           const searchCityNormalized = normalizeString(city);
-          filtered = filtered.filter(p => {
+          const cityFiltered = filtered.filter(p => {
             const pCityNorm = normalizeString(p.city || "");
             const pDistrictNorm = normalizeString(p.district || "");
-
-            // Alanya-Antalya geçişkenliğini artır
-            if (searchCityNormalized === "alanya") {
-              return pCityNorm === "alanya" || pDistrictNorm === "alanya" || pDistrictNorm.includes("alanya");
-            }
-            if (searchCityNormalized === "antalya") {
-              return pCityNorm === "antalya" || pDistrictNorm === "antalya" || pCityNorm === "alanya" || pDistrictNorm === "alanya";
-            }
+            if (searchCityNormalized === "alanya") return pCityNorm === "alanya" || pDistrictNorm.includes("alanya");
+            if (searchCityNormalized === "antalya") return pCityNorm === "antalya" || pCityNorm === "alanya";
             return pCityNorm === searchCityNormalized || pDistrictNorm === searchCityNormalized;
           });
+
+          // Eğer seçilen şehirde hiç ilan yoksa, boş sayfa göstermek yerine
+          // tüm ilanları göster (Teşhis amaçlı)
+          if (cityFiltered.length > 0) {
+            filtered = cityFiltered;
+          } else {
+            console.log(`${city} için ilan bulunamadı, tüm liste gösteriliyor.`);
+          }
         }
 
-        filtered.sort((a, b) => {
-          // Sıralama: Mavi (Elite) > Yeşil (Verified) > Turuncu (Orange)
-          const getWeight = (p: UserProfile) => {
-            if (p.isElite) return 3;
-            if (p.isVerified) return 2;
-            if (p.isOrange) return 1;
-            return 0;
-          };
-          return getWeight(b) - getWeight(a);
-        });
+        // Tier-based shuffling logic
+        const diamond = filtered.filter(p => p.level === 'diamond').sort(() => Math.random() - 0.5);
+        const vip = filtered.filter(p => p.level === 'vip').sort(() => Math.random() - 0.5);
+        const gold = filtered.filter(p => p.level === 'gold').sort(() => Math.random() - 0.5);
 
-        setProfiles(filtered);
+        setProfiles([...diamond, ...vip, ...gold]);
       } catch (err) {
         console.error("Firestore Error:", err);
       } finally {
@@ -394,54 +426,100 @@ export default function RealProfiles({ filter, city, gender }: RealProfilesProps
   }, [filter, city, gender]);
 
   if (loading) return (
-    <div className="py-32 text-center">
-      <div className="inline-block h-12 w-12 animate-spin rounded-full border-4 border-[#ff2d55] border-t-transparent"></div>
-      <p className="mt-4 text-[10px] font-black text-gray-500 uppercase tracking-widest animate-pulse">Profil Bilgileri Yükleniyor...</p>
+    <div className="py-32 flex flex-col items-center justify-center">
+      <div className="relative w-16 h-16">
+        <div className="absolute inset-0 border-4 border-[#d4af37]/20 rounded-full"></div>
+        <div className="absolute inset-0 border-4 border-[#d4af37] border-t-transparent rounded-full animate-spin"></div>
+      </div>
+      <p className="mt-6 text-[11px] font-black text-white/40 uppercase tracking-[0.3em] animate-pulse">LÜKS DENEYİM YÜKLENİYOR</p>
     </div>
   );
 
   if (profiles.length === 0) return (
-    <div className="py-20 text-center space-y-6 px-6 bg-[#0a0a0a] rounded-[2.5rem] border border-[#1a1a1a]">
-      <div className="text-gray-500 font-bold uppercase tracking-widest text-xs">
-        {city !== "all" ? `${city.toUpperCase()} bölgesinde` : "Bu kategoride"} henüz aktif ilan bulunmuyor.
-      </div>
+    <div className="py-24 text-center px-6 rounded-[3rem] border border-white/5 bg-[#050505]/50 backdrop-blur-sm">
+      <p className="text-white/30 font-black uppercase tracking-[0.4em] text-[10px]">Bu kriterlere uygun seçkin ilan bulunamadı</p>
     </div>
   );
 
   return (
-    <div className="space-y-12 w-full px-4">
-      {/* Top Banner */}
-      <div className="flex flex-col md:flex-row items-center justify-between gap-6 px-8 py-5 rounded-[2rem] bg-[#0a0a0a] border border-white/5 shadow-2xl relative overflow-hidden group">
-        <div className="absolute inset-0 bg-gradient-to-r from-[#d4af37]/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity"></div>
-        <div className="flex items-center gap-4 relative z-10">
-          <div className="w-2 h-2 rounded-full bg-[#d4af37] animate-pulse shadow-[0_0_10px_rgba(212,175,55,0.4)]"></div>
-          <p className="text-[10px] font-black text-gray-400 uppercase tracking-[0.2em]">
-            {city === "all" ? "TÜRKİYE GENELİ" : city.toUpperCase()} ÖZEL SEÇİLMİŞ PROFİLLER
-          </p>
+    <div className="space-y-12 w-full px-4 md:px-10 max-w-[1920px] mx-auto pb-40">
+      {/* Ultra Premium Editorial Header */}
+      <div className="relative overflow-hidden rounded-[2rem] bg-[#080808] border border-white/5 p-6 md:p-8 group">
+        {/* Animated Background Element */}
+        <div className="absolute top-0 right-0 w-[300px] h-[300px] bg-[#d4af37]/5 rounded-full blur-[80px] -mr-30 -mt-30 transition-all duration-[2000ms] group-hover:bg-[#d4af37]/10" />
+
+        <div className="relative z-10 flex flex-col md:flex-row md:items-center justify-between gap-3">
+          <div className="max-w-4xl space-y-0.5">
+            <div className="flex items-center gap-2">
+              <span className="w-6 h-[1px] bg-[#d4af37]"></span>
+              <span className="text-[10px] font-black text-[#d4af37] tracking-[0.4em] uppercase">PLATİN SEÇKİSİ</span>
+            </div>
+            <h2 className="text-lg md:text-xl font-black text-white tracking-tight leading-tight">
+              {city === "all" ? "TÜRKİYE" : city.toUpperCase()}{" "}
+              <span className="text-transparent bg-clip-text bg-gradient-to-r from-white/30 to-white/5 italic font-light">EDİTÖRYEL</span>
+            </h2>
+            <p className="text-xs text-white/40 font-medium max-w-xl leading-relaxed">
+              Küratörlerimiz tarafından seçilen en prestijli profiller.
+            </p>
+          </div>
+
+          <div className="flex flex-col">
+            <a
+              href="https://play.google.com/store"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="group/btn relative overflow-hidden px-6 py-3 rounded-full bg-white text-black text-[9px] font-black uppercase tracking-[0.2em] transition-all duration-700 hover:bg-[#d4af37] active:scale-95 text-center"
+            >
+              UYGULAMAYI İNDİR
+            </a>
+          </div>
         </div>
-        <a
-          href="https://play.google.com/store"
-          target="_blank"
-          rel="noopener noreferrer"
-          className="relative z-10 text-[9px] font-black text-black bg-[#d4af37] px-6 py-2.5 rounded-xl hover:scale-105 active:scale-95 transition-all uppercase tracking-widest shadow-lg shadow-[#d4af37]/20"
-        >
-          APP STORE & GOOGLE PLAY
-        </a>
       </div>
 
-      {/* İLAN LİSTELEME ALANI - 2 SÜTUN YATAY PREMİUM DÜZEN */}
-      <div className="space-y-8">
-        <div className="flex items-center gap-4">
-          <h2 className="text-[10px] font-black text-[#d4af37] tracking-[0.4em] uppercase whitespace-nowrap">SEÇKİN İLANLAR</h2>
-          <div className="h-[1px] w-full bg-gradient-to-r from-[#d4af37]/30 via-[#d4af37]/10 to-transparent"></div>
-        </div>
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 md:gap-8">
-          {profiles.map((profile) => (
-            <ProfileCard key={profile.id} profile={profile} />
-          ))}
-        </div>
-      </div>
+      {/* DIAMOND SECTION */}
+      {profiles.filter(p => p.level === 'diamond').length > 0 && (
+        <section className="space-y-6">
+          <div className="flex items-center gap-4 px-2">
+            <h2 className="text-sm font-black text-[#d4af37] tracking-[0.5em] uppercase whitespace-nowrap">DIAMOND</h2>
+            <div className="h-[1px] w-full bg-gradient-to-r from-[#d4af37]/50 to-transparent"></div>
+          </div>
+          <div className="grid grid-cols-1 md:grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4 gap-6">
+            {profiles.filter(p => p.level === 'diamond').map((profile) => (
+              <ProfileCard key={profile.id} profile={profile} />
+            ))}
+          </div>
+        </section>
+      )}
+
+      {/* VIP SECTION */}
+      {profiles.filter(p => p.level === 'vip').length > 0 && (
+        <section className="space-y-6">
+          <div className="flex items-center gap-4 px-2">
+            <h2 className="text-sm font-black text-blue-400 tracking-[0.5em] uppercase whitespace-nowrap">VIP</h2>
+            <div className="h-[1px] w-full bg-gradient-to-r from-blue-400/50 to-transparent"></div>
+          </div>
+          <div className="grid grid-cols-1 md:grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4 gap-6">
+            {profiles.filter(p => p.level === 'vip').map((profile) => (
+              <ProfileCard key={profile.id} profile={profile} />
+            ))}
+          </div>
+        </section>
+      )}
+
+      {/* GOLD SECTION */}
+      {profiles.filter(p => p.level === 'gold').length > 0 && (
+        <section className="space-y-6">
+          <div className="flex items-center gap-4 px-2">
+            <h2 className="text-sm font-black text-emerald-400 tracking-[0.5em] uppercase whitespace-nowrap">GOLD</h2>
+            <div className="h-[1px] w-full bg-gradient-to-r from-emerald-400/50 to-transparent"></div>
+          </div>
+          <div className="grid grid-cols-1 md:grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4 gap-6">
+            {profiles.filter(p => p.level === 'gold').map((profile) => (
+              <ProfileCard key={profile.id} profile={profile} />
+            ))}
+          </div>
+        </section>
+      )}
     </div>
   );
 }
-

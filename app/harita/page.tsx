@@ -14,6 +14,7 @@ type UserLocation = {
   isVerified: boolean;
   isElite: boolean;
   isApproved: boolean;
+  isInvisible?: boolean;
 };
 
 export default function HaritaPage() {
@@ -42,8 +43,9 @@ export default function HaritaPage() {
             isVerified: data.isVerified || data.isIdVerified || false,
             isElite: data.isElite || false,
             isApproved: data.isApproved || false,
+            isInvisible: data.isInvisible === true || String(data.isInvisible) === "true",
           };
-        });
+        }).filter(u => !u.isInvisible);
         setUsers(loaded);
       } catch (err) {
         console.error("Map Load Error:", err);
@@ -67,14 +69,14 @@ export default function HaritaPage() {
     : users.filter(u => u.city.toLowerCase().includes(selectedRegion.toLowerCase()));
 
   return (
-    <div className="min-h-screen bg-black text-white selection:bg-[#ff2d55]/30">
+    <div className="min-h-screen bg-black text-white selection:bg-[#d4af37]/30">
       <div className="max-w-6xl mx-auto px-6 py-12">
         <div className="text-center mb-12 space-y-4">
-          <div className="inline-block px-6 py-2 bg-[#ff2d55]/10 border border-[#ff2d55]/30 rounded-full text-[10px] font-black uppercase tracking-[0.3em] text-[#ff2d55]">
+          <div className="inline-block px-6 py-2 bg-[#d4af37]/10 border border-[#d4af37]/30 rounded-full text-[10px] font-black uppercase tracking-[0.3em] text-[#d4af37]">
             BÖLGESEL KEŞİF VE ETKİNLİK PLANI
           </div>
           <h1 className="text-4xl md:text-5xl font-black text-white tracking-tighter uppercase">
-            YAKINDAKİ <span className="text-[#ff2d55]">REFKATÇİLER</span>
+            YAKINDAKİ <span className="text-[#d4af37]">REFKATÇİLER</span>
           </h1>
           <p className="text-gray-400 font-medium max-w-xl mx-auto text-sm leading-relaxed">
             Canlı konum takibi ve tam interaktif Google Maps entegrasyonu yüksek güvenlik standartları gereği mobil uygulamamızda aktiftir. Web sürümünde şehir ve bölge bazlı seçkin üyeleri listeleyebilirsiniz.
@@ -89,7 +91,7 @@ export default function HaritaPage() {
               onClick={() => setSelectedRegion(region)}
               className={`px-5 py-2.5 rounded-xl text-xs font-black uppercase tracking-wider transition-all border ${
                 selectedRegion === region
-                  ? 'bg-[#ff2d55] text-white border-[#ff2d55] shadow-lg shadow-[#ff2d55]/20'
+                  ? 'bg-[#d4af37] text-black border-[#d4af37] shadow-lg shadow-[#d4af37]/20'
                   : 'bg-[#0a0a0a] text-gray-400 border-[#1a1a1a] hover:border-gray-700'
               }`}
             >
@@ -100,7 +102,7 @@ export default function HaritaPage() {
 
         {loading ? (
           <div className="flex flex-col items-center justify-center py-20">
-            <div className="w-12 h-12 border-4 border-[#ff2d55] border-t-transparent rounded-full animate-spin"></div>
+            <div className="w-12 h-12 border-4 border-[#d4af37] border-t-transparent rounded-full animate-spin"></div>
           </div>
         ) : (
           <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-6">
@@ -108,28 +110,28 @@ export default function HaritaPage() {
               <Link
                 key={user.id}
                 href={`/profil/${user.id}`}
-                className="group relative flex flex-col items-center p-5 rounded-3xl bg-[#0a0a0a] border border-[#1a1a1a] hover:border-[#ff2d55]/40 transition-all hover:scale-[1.02] shadow-xl"
+                className="group relative flex flex-col items-center p-5 rounded-3xl bg-[#0a0a0a] border border-[#1a1a1a] hover:border-[#d4af37]/40 transition-all hover:scale-[1.02] shadow-xl"
               >
                 {user.isElite && (
                   <div className="absolute top-3 right-3 bg-amber-500/10 border border-amber-500/30 text-amber-500 text-[8px] font-black px-2 py-0.5 rounded-full tracking-widest uppercase">
                     ELİT
                   </div>
                 )}
-                <div className="relative w-24 h-24 rounded-full overflow-hidden mb-4 border-2 border-[#1a1a1a] group-hover:border-[#ff2d55]/50 transition-colors shadow-inner bg-[#111] flex items-center justify-center">
+                <div className="relative w-24 h-24 rounded-full overflow-hidden mb-4 border-2 border-[#1a1a1a] group-hover:border-[#d4af37]/50 transition-colors shadow-inner bg-[#111] flex items-center justify-center">
                   {user.image ? (
                     <img src={user.image} alt={user.name} className="w-full h-full object-cover" />
                   ) : (
                     <span className="text-3xl opacity-30 select-none">👤</span>
                   )}
                   {user.isVerified && (
-                    <div className="absolute bottom-0 right-1 bg-blue-500 rounded-full p-1 border-2 border-[#0a0a0a]" title="Kimlik Doğrulanmış Üye">
+                    <div className="absolute bottom-0 right-1 bg-blue-500 rounded-full p-1 border-2 border-[#0a0a0a]" title="Onaylı Üye">
                       <svg className="w-2.5 h-2.5 text-white" fill="none" stroke="currentColor" strokeWidth="3" viewBox="0 0 24 24">
                         <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
                       </svg>
                     </div>
                   )}
                 </div>
-                <h3 className="text-xs font-black text-white uppercase tracking-tight truncate w-full text-center group-hover:text-[#ff2d55] transition-colors">
+                <h3 className="text-xs font-black text-white uppercase tracking-tight truncate w-full text-center group-hover:text-[#d4af37] transition-colors">
                   {user.name.includes('***') ? user.name : `${user.name[0]}.***`}
                 </h3>
                 <p className="text-[9px] text-gray-500 font-bold uppercase tracking-widest mt-1.5 flex items-center gap-1">
@@ -142,10 +144,10 @@ export default function HaritaPage() {
 
         {/* Mobile CTA - PREMIUM DOWNLOAD SECTION */}
         <div className="mt-20 p-8 md:p-12 rounded-[3rem] bg-[#0a0a0a] border border-[#1a1a1a] text-center shadow-2xl relative overflow-hidden group">
-          <div className="absolute inset-0 bg-gradient-to-br from-[#ff2d55]/5 to-transparent opacity-50"></div>
+          <div className="absolute inset-0 bg-gradient-to-br from-[#d4af37]/5 to-transparent opacity-50"></div>
 
           <div className="relative z-10 space-y-6">
-            <div className="mx-auto w-16 h-16 bg-[#ff2d55]/10 rounded-full flex items-center justify-center text-2xl text-[#ff2d55]">
+            <div className="mx-auto w-16 h-16 bg-[#d4af37]/10 rounded-full flex items-center justify-center text-2xl text-[#d4af37]">
               🗺️
             </div>
             <h3 className="text-2xl md:text-3xl font-black text-white uppercase tracking-tighter">İnteraktif Canlı Harita Deneyimi</h3>
@@ -158,7 +160,7 @@ export default function HaritaPage() {
                 href="https://play.google.com/store"
                 target="_blank"
                 rel="noopener noreferrer"
-                className="group/btn relative flex items-center gap-4 rounded-2xl bg-black border border-white/10 p-3 pr-8 transition-all hover:border-[#ff2d55]/50 hover:bg-[#050505] hover:scale-105 active:scale-95 w-full sm:w-auto"
+                className="group/btn relative flex items-center gap-4 rounded-2xl bg-black border border-white/10 p-3 pr-8 transition-all hover:border-[#d4af37]/50 hover:bg-[#050505] hover:scale-105 active:scale-95 w-full sm:w-auto"
               >
                 <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-gradient-to-br from-[#34a853] to-[#4285f4] text-xl shadow-lg">
                   🤖
@@ -173,7 +175,7 @@ export default function HaritaPage() {
                 href="https://www.apple.com/app-store"
                 target="_blank"
                 rel="noopener noreferrer"
-                className="group/btn relative flex items-center gap-4 rounded-2xl bg-black border border-white/10 p-3 pr-8 transition-all hover:border-[#ff2d55]/50 hover:bg-[#050505] hover:scale-105 active:scale-95 w-full sm:w-auto"
+                className="group/btn relative flex items-center gap-4 rounded-2xl bg-black border border-white/10 p-3 pr-8 transition-all hover:border-[#d4af37]/50 hover:bg-[#050505] hover:scale-105 active:scale-95 w-full sm:w-auto"
               >
                 <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-gradient-to-br from-[#555] to-[#222] text-xl shadow-lg">
                   🍎

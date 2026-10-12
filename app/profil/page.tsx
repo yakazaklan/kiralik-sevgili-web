@@ -19,16 +19,21 @@ export default function ProfilPage() {
           const docRef = doc(db, 'users', currentUser.uid);
           const docSnap = await getDoc(docRef);
           if (docSnap.exists()) {
-            setProfile(docSnap.data());
+            const data = docSnap.data();
+            setProfile({
+              ...data,
+              name: data.name || data.displayName || currentUser.displayName || "Seçkin Üye",
+              alyaBalance: data.alyaBalance ?? 0,
+              meetingCount: data.completedMeetingsCount ?? data.meetingCount ?? 0
+            });
           } else {
-            // Fallback mock profile data for clean presentation if document doesn't exist yet
             setProfile({
               name: currentUser.displayName || "Seçkin Üye",
               city: "İstanbul",
               role: "user",
-              isIdVerified: true,
-              alyaBalance: 250,
-              meetingCount: 12
+              isIdVerified: false,
+              alyaBalance: 0,
+              meetingCount: 0
             });
           }
         } catch (e) {
@@ -37,22 +42,14 @@ export default function ProfilPage() {
             name: currentUser.displayName || "Seçkin Üye",
             city: "İstanbul",
             role: "user",
-            isIdVerified: true,
-            alyaBalance: 250,
-            meetingCount: 12
+            isIdVerified: false,
+            alyaBalance: 0,
+            meetingCount: 0
           });
         }
       } else {
-        // Mock user session for demonstration if not logged in to make the page premium and interactive
-        setUser({ uid: "demo-uid", displayName: "Demir Yılmaz" });
-        setProfile({
-          name: "Demir Yılmaz",
-          city: "İstanbul",
-          role: "companion",
-          isIdVerified: true,
-          alyaBalance: 450,
-          meetingCount: 28
-        });
+        setUser(null);
+        setProfile(null);
       }
       setLoading(false);
     });
@@ -72,13 +69,13 @@ export default function ProfilPage() {
   if (loading) {
     return (
       <div className="min-h-screen bg-black flex items-center justify-center">
-        <div className="w-12 h-12 border-4 border-[#ff2d55] border-t-transparent rounded-full animate-spin"></div>
+        <div className="w-12 h-12 border-4 border-[#d4af37] border-t-transparent rounded-full animate-spin"></div>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-black text-white selection:bg-[#ff2d55]/30">
+    <div className="min-h-screen bg-black text-white selection:bg-[#d4af37]/30">
       <div className="max-w-4xl mx-auto px-6 py-16">
 
         {/* Profile Header */}
@@ -128,13 +125,13 @@ export default function ProfilPage() {
 
         {/* Action Grid */}
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
-          <Link href="/topluluk" className="p-8 rounded-[2.5rem] bg-[#0a0a0a] border border-[#1a1a1a] hover:border-[#ff2d55]/40 transition-all group shadow-xl">
-            <div className="w-12 h-12 bg-[#ff2d55]/10 text-[#ff2d55] rounded-2xl flex items-center justify-center text-xl mb-6 group-hover:scale-110 transition-transform">🏘️</div>
-            <h3 className="text-base font-black text-white uppercase tracking-tight mb-2 group-hover:text-[#ff2d55] transition-colors">TOPLULUK AKIŞI</h3>
+          <Link href="/topluluk" className="p-8 rounded-[2.5rem] bg-[#0a0a0a] border border-[#1a1a1a] hover:border-[#d4af37]/40 transition-all group shadow-xl">
+            <div className="w-12 h-12 bg-[#d4af37]/10 text-[#d4af37] rounded-2xl flex items-center justify-center text-xl mb-6 group-hover:scale-110 transition-transform">🏘️</div>
+            <h3 className="text-base font-black text-white uppercase tracking-tight mb-2 group-hover:text-[#d4af37] transition-colors">TOPLULUK AKIŞI</h3>
             <p className="text-xs text-gray-500 font-medium leading-relaxed">Sosyal paylaşımlarınızı, fısıltıları ve etkinlik davetlerinizi yönetin.</p>
           </Link>
 
-          <Link href="/mesajlar" className="p-8 rounded-[2.5rem] bg-[#0a0a0a] border border-[#1a1a1a] hover:border-[#ff2d55]/40 transition-all group shadow-xl">
+          <Link href="/mesajlar" className="p-8 rounded-[2.5rem] bg-[#0a0a0a] border border-[#1a1a1a] hover:border-[#d4af37]/40 transition-all group shadow-xl">
             <div className="w-12 h-12 bg-blue-500/10 text-blue-500 rounded-2xl flex items-center justify-center text-xl mb-6 group-hover:scale-110 transition-transform">💬</div>
             <h3 className="text-base font-black text-white uppercase tracking-tight mb-2 group-hover:text-blue-500 transition-colors">MESAJLARIM</h3>
             <p className="text-xs text-gray-500 font-medium leading-relaxed">Gelen gerçek zamanlı mesajları ve arkadaşlık isteklerini kontrol edin.</p>
@@ -145,10 +142,16 @@ export default function ProfilPage() {
             <div className="w-12 h-12 bg-gray-500/10 text-gray-400 rounded-2xl flex items-center justify-center text-xl mb-6">⚙️</div>
             <h3 className="text-base font-black text-white uppercase tracking-tight mb-2">PROFİL AYARLARI</h3>
             <p className="text-xs text-gray-500 font-medium leading-relaxed mb-4">Profil detaylarını, WhatsApp iletişim kanallarını ve fotoğrafları güncelleyin.</p>
-            <a href="https://play.google.com/store" target="_blank" className="text-[10px] font-black text-[#ff2d55] uppercase tracking-wider hover:underline">UYGULAMAYI AÇ ➔</a>
+            <a href="https://play.google.com/store" target="_blank" className="text-[10px] font-black text-[#d4af37] uppercase tracking-wider hover:underline">UYGULAMAYI AÇ ➔</a>
           </div>
 
-          <button onClick={handleLogout} className="p-8 rounded-[2.5rem] bg-[#0a0a0a] border border-[#1a1a1a] hover:border-red-500/40 transition-all group text-left shadow-xl">
+          <Link href="/hesap-silme" className="p-8 rounded-[2.5rem] bg-[#0a0a0a] border border-[#1a1a1a] hover:border-red-500/40 transition-all group shadow-xl">
+            <div className="w-12 h-12 bg-red-500/10 text-red-500 rounded-2xl flex items-center justify-center text-xl mb-6 group-hover:scale-110 transition-transform">🗑️</div>
+            <h3 className="text-base font-black text-white uppercase tracking-tight mb-2 group-hover:text-red-500 transition-colors">HESABI SİL</h3>
+            <p className="text-xs text-gray-500 font-medium leading-relaxed">Hesabınızı ve verilerinizi kalıcı olarak silme işlemini başlatın.</p>
+          </Link>
+
+          <button onClick={handleLogout} className="p-8 rounded-[2.5rem] bg-[#0a0a0a] border border-[#1a1a1a] hover:border-red-500/40 transition-all group text-left shadow-xl sm:col-span-2">
             <div className="w-12 h-12 bg-red-500/10 text-red-500 rounded-2xl flex items-center justify-center text-xl mb-6 group-hover:scale-110 transition-transform">🚪</div>
             <h3 className="text-base font-black text-white uppercase tracking-tight mb-2 group-hover:text-red-500 transition-colors">GÜVENLİ ÇIKIŞ</h3>
             <p className="text-xs text-gray-500 font-medium leading-relaxed">Mevcut oturumunuzu güvenli bir şekilde sonlandırın.</p>

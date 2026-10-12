@@ -4,6 +4,8 @@ import { notFound } from "next/navigation";
 import { getCityBySlug, getDistrictBySlug, slugify, CITIES, TURKEY_DATA } from "@/lib/turkey-zones";
 import Link from "next/link";
 import DistrictClientContent from "./DistrictClientContent";
+import { getDistrictSeoInfo } from "@/lib/seo-data";
+import { absoluteUrl } from "@/lib/site";
 
 interface PageProps {
   params: Promise<{ city: string; district: string }>;
@@ -22,7 +24,7 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
 
   const title = `Kiralık Sevgili ${actualDistrictName} | Sosyal Arkadaşlık ve Refakat`;
   const description = `${actualCityName} ${actualDistrictName} ilçesinde elit sosyal arkadaşlık, platonik refakat ve davet eşlikçisi profilleri. En kaliteli buluşma ve etkinlik deneyimleri için topluluk ilanları.`;
-  const canonical = `https://kiraliksevgili.net/${resolvedParams.city}/${resolvedParams.district}`;
+  const canonical = absoluteUrl(`${resolvedParams.city}/${resolvedParams.district}`);
 
   return {
     title,
@@ -63,41 +65,48 @@ export default async function DistrictPage({ params }: PageProps) {
   if (!actualDistrictName) notFound();
 
   const currentCityDistricts = TURKEY_DATA[actualCityName] || [];
+  const districtSeoInfo = getDistrictSeoInfo(actualCityName, actualDistrictName);
 
   return (
-    <main className="min-h-screen bg-black text-white selection:bg-pink-500/30">
+    <main className="min-h-screen bg-black text-white selection:bg-[#d4af37]/30">
       {/* GÖRÜNÜR LOCAL SEO VE DETAY BLOKLARI */}
-      <section className="relative pt-12 pb-6 bg-gradient-to-b from-[#0a0a0a] to-black border-b border-[#111]">
+      <section className="relative pt-8 pb-4 bg-gradient-to-b from-[#0a0a0a] to-black border-b border-[#111]">
         <div className="mx-auto max-w-5xl px-6">
-          <div className="flex flex-col gap-2 mb-4">
+          <div className="flex flex-col gap-1 mb-3">
             {/* Breadcrumb */}
-            <div className="flex items-center gap-2 text-[10px] font-black uppercase text-gray-500 tracking-wider">
+            <div className="flex items-center gap-2 text-[8px] font-black uppercase text-gray-500 tracking-wider">
               <Link href="/" className="hover:text-white transition-colors">ANA SAYFA</Link>
               <span>/</span>
               <Link href={`/${cityParam}`} className="hover:text-white transition-colors">{actualCityName}</Link>
               <span>/</span>
-              <span className="text-[#ff2d55]">{actualDistrictName}</span>
+              <span className="text-[#d4af37]">{actualDistrictName}</span>
             </div>
 
-            <h1 className="text-4xl font-black uppercase tracking-tight text-white mb-2">
+            <h1 className="text-lg md:text-xl font-black uppercase tracking-tight text-white mb-1">
               {actualCityName} {actualDistrictName} Sosyal Arkadaşlık ve Refakat
             </h1>
           </div>
 
-          <div className="p-6 rounded-2xl bg-[#080808] border border-[#1a1a1a] text-xs text-gray-400 space-y-4 leading-relaxed">
+          <div className="p-4 rounded-2xl bg-[#080808] border border-[#1a1a1a] text-[10px] text-gray-400 space-y-3 leading-relaxed">
             <p>
               <strong className="text-white">{actualCityName} - {actualDistrictName}</strong> bölgesindeki en prestijli davetler, sinema günleri, konserler veya özel sohbet etkinlikleri için bir sosyal refakatçi arıyorsanız doğru yerdesiniz. Kiralık Sevgili altyapısı, tamamen gerçek kişilerin platonik sosyal arkadaşlık taleplerini profesyonel bir vizyonla buluşturur.
             </p>
             <p>
-              İnternet dünyasındaki <span className="text-gray-300 font-bold">{actualDistrictName} eskort</span> veya yasal olmayan cinsel içerikli aramaların oluşturduğu kirlilikten uzak durmak isteyen medeni kullanıcılar için en güvenli alternatif sosyal refakat modelidir. Platformumuz cinsel birliktelikler, eskort hizmetleri veya illegal buluşmalar organize etmez; kullanıcıların kendi rızasıyla kurduğu saygılı arkadaşlık ilişkilerini esas alır.
+              İnternet dünyasındaki <span className="text-gray-300 font-bold">{actualDistrictName} eskort</span> veya yasal olmayan cinsel içerikli aramaların oluşturduğu kirlilikten uzak durmak isteyen medeni kullanıcılar için en güvenli alternatif sosyal refakat modelidir.
+              Platformumuz cinsel birliktelikler, eskort hizmetleri veya illegal buluşmalar organize etmez; kullanıcıların kendi rızasıyla kurduğu saygılı arkadaşlık ilişkilerini esas alır.
             </p>
+            {districtSeoInfo && (
+              <div className="mt-4 p-4 rounded-xl bg-white/[0.02] border-l-4 border-[#d4af37] text-gray-300 italic shadow-inner">
+                {districtSeoInfo}
+              </div>
+            )}
           </div>
         </div>
       </section>
 
       {/* REAF PROFILES CLIENT ALANI */}
-      <section className="py-12">
-        <div className="mx-auto max-w-5xl px-6 space-y-8">
+      <section className="py-6">
+        <div className="mx-auto max-w-5xl px-6 space-y-6">
           <DistrictClientContent cityParam={cityParam} districtParam={districtParam} cityName={actualCityName} districtName={actualDistrictName} />
         </div>
       </section>
@@ -115,8 +124,8 @@ export default async function DistrictPage({ params }: PageProps) {
                 href={`/${cityParam}/${slugify(dist)}`}
                 className={`px-4 py-2 text-[9px] font-black border rounded-xl transition-all uppercase ${
                   dist.toLowerCase() === actualDistrictName.toLowerCase()
-                    ? "border-[#ff2d55] bg-[#ff2d55]/10 text-white"
-                    : "bg-[#0a0a0a] border-[#1a1a1a] text-gray-400 hover:border-[#ff2d55]/50 hover:text-white"
+                    ? "border-[#d4af37] bg-[#d4af37]/10 text-white"
+                    : "bg-[#0a0a0a] border-[#1a1a1a] text-gray-400 hover:border-[#d4af37]/50 hover:text-white"
                 }`}
               >
                 {dist}
@@ -126,7 +135,7 @@ export default async function DistrictPage({ params }: PageProps) {
         </div>
 
         <div className="p-10 rounded-[2.5rem] bg-[#0a0a0a] border border-[#1a1a1a] text-center shadow-3xl">
-          <h4 className="text-[10px] font-black text-[#ff2d55] uppercase tracking-[0.4em] mb-4">
+          <h4 className="text-[10px] font-black text-[#d4af37] uppercase tracking-[0.4em] mb-4">
             {actualDistrictName.toUpperCase()} SOSYAL REFAKAT & KÜLTÜREL EŞLİK AĞI
           </h4>
           <p className="text-xs text-gray-500 leading-relaxed max-w-4xl mx-auto">

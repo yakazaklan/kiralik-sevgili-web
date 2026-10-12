@@ -60,7 +60,7 @@ export default function ProfilDuzenlePage() {
   if (loading) {
     return (
       <div className="flex justify-center py-40 bg-black min-h-screen">
-        <div className="w-12 h-12 border-4 border-[#ff2d55] border-t-transparent rounded-full animate-spin"></div>
+        <div className="w-12 h-12 border-4 border-[#d4af37] border-t-transparent rounded-full animate-spin"></div>
       </div>
     );
   }
@@ -71,7 +71,7 @@ export default function ProfilDuzenlePage() {
   }
 
   return (
-    <div className="max-w-2xl mx-auto px-6 py-16 bg-black min-h-screen text-white">
+    <div className="max-w-2xl mx-auto px-6 py-16 bg-black min-h-screen text-white selection:bg-[#d4af37]/30">
       <div className="mb-10 flex items-center gap-4">
         <Link href="/profil" className="w-10 h-10 flex items-center justify-center rounded-full bg-[#1a1a1a] hover:bg-[#222] transition-all">
           ←
@@ -95,7 +95,7 @@ export default function ProfilDuzenlePage() {
                 value={whatsappNumber}
                 onChange={(e) => setWhatsappNumber(e.target.value)}
                 placeholder="+905XXXXXXXXX"
-                className="w-full bg-[#111] border border-[#222] rounded-2xl p-4 text-white text-sm focus:border-[#ff2d55]/50 outline-none transition-all"
+                className="w-full bg-[#111] border border-[#222] rounded-2xl p-4 text-white text-sm focus:border-[#d4af37]/50 outline-none transition-all"
               />
               <p className="mt-2 text-[10px] text-gray-600 font-medium">
                 Numaranızı uluslararası formatta giriniz (Örn: +905001234567)
@@ -109,7 +109,7 @@ export default function ProfilDuzenlePage() {
                   id="whatsappEnabled"
                   checked={whatsappContactEnabled}
                   onChange={(e) => setWhatsappContactEnabled(e.target.checked)}
-                  className="w-5 h-5 rounded border-gray-800 text-[#ff2d55] focus:ring-[#ff2d55] bg-black"
+                  className="w-5 h-5 rounded border-gray-800 text-[#d4af37] focus:ring-[#d4af37] bg-black"
                 />
               </div>
               <label htmlFor="whatsappEnabled" className="flex-1 cursor-pointer">
@@ -127,7 +127,7 @@ export default function ProfilDuzenlePage() {
         <button
           type="submit"
           disabled={saving}
-          className="w-full py-5 bg-[#ff2d55] text-white rounded-[2rem] font-black text-xs uppercase tracking-[0.2em] hover:bg-[#ff2d55]/80 transition-all shadow-xl shadow-[#ff2d55]/20 disabled:opacity-50"
+          className="w-full py-5 bg-[#d4af37] text-black rounded-[2rem] font-black text-xs uppercase tracking-[0.2em] hover:bg-[#d4af37]/80 transition-all shadow-xl shadow-[#d4af37]/20 disabled:opacity-50"
         >
           {saving ? "GÜNCELLENİYOR..." : "DEĞİŞİKLİKLERİ KAYDET"}
         </button>

@@ -71,8 +71,8 @@ function PostCard({ post }: { post: Post }) {
   }
 
   return (
-    <div className={`relative overflow-hidden rounded-[2rem] bg-[#0a0a0a] border border-[#1a1a1a] transition-all duration-500 hover:border-[#ff2d55]/30 ${
-      isBoosted ? 'ring-2 ring-blue-500/50' : post.trustScore > 0 ? 'ring-2 ring-amber-500/50' : ''
+    <div className={`relative overflow-hidden rounded-[2rem] bg-[#0a0a0a] border border-[#1a1a1a] transition-all duration-500 hover:border-[#d4af37]/30 ${
+      isBoosted ? 'ring-2 ring-blue-500/50' : post.trustScore > 0 ? 'ring-2 ring-[#d4af37]/50' : ''
     }`}>
       {isBoosted && (
         <div className="bg-blue-600 py-1.5 text-center">
@@ -81,7 +81,7 @@ function PostCard({ post }: { post: Post }) {
       )}
 
       {post.trustScore > 0 && !isBoosted && (
-        <div className="bg-gradient-to-r from-amber-600 to-amber-400 py-1.5 text-center">
+        <div className="bg-gradient-to-r from-[#d4af37] to-[#d4af37]/70 py-1.5 text-center">
           <span className="text-[9px] font-black text-black uppercase tracking-[0.2em]">✨ POPÜLER FISILTI</span>
         </div>
       )}
@@ -107,6 +107,9 @@ function PostCard({ post }: { post: Post }) {
                   <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z"/></svg>
                 </span>
               )}
+              {post.isElite && !post.isAnonymous && (
+                 <span className="text-[7px] font-black text-blue-400 uppercase tracking-widest bg-blue-400/10 px-1.5 py-0.5 rounded-full">ELİT</span>
+              )}
             </div>
             <p className="text-[10px] text-gray-500 font-medium">
               {post.district}, {post.city} • {dateStr}
@@ -130,21 +133,21 @@ function PostCard({ post }: { post: Post }) {
                 <button
                   onClick={() => handleReport('Uygunsuz İçerik')}
                   disabled={isReporting}
-                  className="w-full text-left px-4 py-3 text-xs text-gray-300 hover:bg-[#ff2d55]/10 hover:text-[#ff2d55] transition-colors"
+                  className="w-full text-left px-4 py-3 text-xs text-gray-300 hover:bg-[#d4af37]/10 hover:text-[#d4af37] transition-colors"
                 >
                   Uygunsuz İçerik
                 </button>
                 <button
                   onClick={() => handleReport('Spam/Reklam')}
                   disabled={isReporting}
-                  className="w-full text-left px-4 py-3 text-xs text-gray-300 hover:bg-[#ff2d55]/10 hover:text-[#ff2d55] transition-colors"
+                  className="w-full text-left px-4 py-3 text-xs text-gray-300 hover:bg-[#d4af37]/10 hover:text-[#d4af37] transition-colors"
                 >
                   Spam/Reklam
                 </button>
                 <button
                   onClick={() => handleReport('Taciz/Saldırı')}
                   disabled={isReporting}
-                  className="w-full text-left px-4 py-3 text-xs text-gray-300 hover:bg-[#ff2d55]/10 hover:text-[#ff2d55] transition-colors"
+                  className="w-full text-left px-4 py-3 text-xs text-gray-300 hover:bg-[#d4af37]/10 hover:text-[#d4af37] transition-colors"
                 >
                   Taciz/Saldırı
                 </button>
@@ -168,7 +171,7 @@ function PostCard({ post }: { post: Post }) {
         <div className="flex items-center justify-between pt-4 border-t border-[#1a1a1a]">
           <div className="flex items-center gap-6">
             <div className="flex items-center gap-2 group cursor-pointer">
-              <span className={`text-lg transition-transform group-hover:scale-110 ${post.likes?.length > 0 ? 'text-[#ff2d55]' : 'text-gray-600'}`}>
+              <span className={`text-lg transition-transform group-hover:scale-110 ${post.likes?.length > 0 ? 'text-[#d4af37]' : 'text-gray-600'}`}>
                 {post.likes?.length > 0 ? '❤️' : '🤍'}
               </span>
               <span className="text-[11px] font-bold text-gray-500">{post.likes?.length || 0}</span>
@@ -178,7 +181,6 @@ function PostCard({ post }: { post: Post }) {
               <span className="text-[11px] font-bold text-gray-500">{post.commentCount || 0}</span>
             </div>
           </div>
-          {/* CEVAPLA butonu kaldırıldı, etkileşim yorumlar üzerinden sağlanacak */}
         </div>
       </div>
     </div>
@@ -274,13 +276,13 @@ export default function DedikoduPage() {
   const isFullyVerified = userProfile?.isApproved === true && userProfile?.isVerified === true;
 
   return (
-    <div className="max-w-4xl mx-auto px-6 py-12">
+    <div className="max-w-4xl mx-auto px-6 py-12 selection:bg-[#d4af37]/30">
       <div className="text-center mb-12 space-y-4">
-        <div className="inline-block px-6 py-2 bg-[#ff2d55]/10 border border-[#ff2d55]/30 rounded-full text-[10px] font-black uppercase tracking-[0.3em] text-[#ff2d55] mb-4">
+        <div className="inline-block px-6 py-2 bg-[#d4af37]/10 border border-[#d4af37]/30 rounded-full text-[10px] font-black uppercase tracking-[0.3em] text-[#d4af37] mb-4">
           DEDİKODU & FISILTILAR
         </div>
         <h1 className="text-4xl md:text-5xl font-black text-white tracking-tighter uppercase">
-          ŞEHRİNDE <span className="text-[#ff2d55]">NELER OLUYOR?</span>
+          ŞEHRİNDE <span className="text-[#d4af37]">NELER OLUYOR?</span>
         </h1>
       </div>
 
@@ -292,7 +294,7 @@ export default function DedikoduPage() {
           </p>
         ) : !isFullyVerified ? (
           <div className="text-center space-y-2">
-            <p className="text-amber-500 font-black uppercase text-[10px] tracking-widest">
+            <p className="text-[#d4af37] font-black uppercase text-[10px] tracking-widest">
               ⚠️ KİMLİK ONAYI EKSİK
             </p>
             <p className="text-gray-500 text-xs font-medium">
@@ -305,13 +307,13 @@ export default function DedikoduPage() {
               value={newPost}
               onChange={(e) => setNewPost(e.target.value)}
               placeholder="Şehrine bir fısıltı bırak..."
-              className="w-full bg-[#111] border border-[#222] rounded-2xl p-4 text-white text-sm focus:border-[#ff2d55]/50 outline-none min-h-[100px] transition-all"
+              className="w-full bg-[#111] border border-[#222] rounded-2xl p-4 text-white text-sm focus:border-[#d4af37]/50 outline-none min-h-[100px] transition-all"
             />
             <div className="flex items-center justify-between">
               <button
                 onClick={() => setIsAnonymous(!isAnonymous)}
                 className={`flex items-center gap-2 px-4 py-2 rounded-xl border transition-all text-[10px] font-black uppercase tracking-widest ${
-                  isAnonymous ? 'bg-[#ff2d55]/10 border-[#ff2d55] text-[#ff2d55]' : 'bg-[#111] border-[#222] text-gray-500'
+                  isAnonymous ? 'bg-[#d4af37]/10 border-[#d4af37] text-[#d4af37]' : 'bg-[#111] border-[#222] text-gray-500'
                 }`}
               >
                 {isAnonymous ? '🎭 ANONİM: AÇIK' : '👤 ANONİM: KAPALI'}
@@ -319,7 +321,7 @@ export default function DedikoduPage() {
               <button
                 onClick={handleShare}
                 disabled={isPosting || !newPost.trim()}
-                className="px-8 py-3 bg-[#ff2d55] text-white rounded-xl text-[10px] font-black uppercase tracking-widest hover:bg-[#ff2d55]/80 disabled:opacity-50 transition-all shadow-lg shadow-[#ff2d55]/20"
+                className="px-8 py-3 bg-[#d4af37] text-black font-black rounded-xl text-[10px] font-black uppercase tracking-widest hover:bg-[#d4af37]/80 disabled:opacity-50 transition-all shadow-lg shadow-[#d4af37]/20"
               >
                 {isPosting ? 'GÖNDERİLİYOR...' : 'FISILTIYI PAYLAŞ'}
               </button>
@@ -330,7 +332,7 @@ export default function DedikoduPage() {
 
       {loading ? (
         <div className="flex flex-col items-center justify-center py-20">
-          <div className="w-12 h-12 border-4 border-[#ff2d55] border-t-transparent rounded-full animate-spin"></div>
+          <div className="w-12 h-12 border-4 border-[#d4af37] border-t-transparent rounded-full animate-spin"></div>
         </div>
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 gap-8">

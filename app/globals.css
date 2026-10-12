@@ -6,7 +6,6 @@
   --card-bg: #0a0a0a;
   --card-hover: #111111;
   --border-color: #1a1a1a;
-  --accent-pink: #ff2d55;
   --accent-gold: #d4af37;
 }
 
@@ -27,12 +26,12 @@ body {
 
 .premium-card:hover {
   background: var(--card-hover);
-  border-color: var(--accent-pink);
+  border-color: var(--accent-gold);
   transform: translateY(-2px);
 }
 
 .premium-gradient-text {
-  background: linear-gradient(135deg, #ff2d55 0%, #ff5274 100%);
+  background: linear-gradient(135deg, #d4af37 0%, #f4d03f 100%);
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
 }
