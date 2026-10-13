@@ -169,15 +169,20 @@ export default function ProfileClient() {
                                    ["rejected", "blocked", "banned"].includes(nStatus);
 
         const isInvisible = data.isInvisible === true || String(data.isInvisible) === "true";
+        const role = String(data.role || nested.role || "").toLowerCase();
 
         // hasProfile alanı eksikse, profil verisi veya ismi varsa var kabul et
         const hasProfile = raw.hasProfile === true || String(raw.hasProfile) === "true" ||
                           data.hasProfile === true || String(data.hasProfile) === "true" ||
                           (data.name && data.bio);
 
+        // Rol Filtresi: RealProfiles.tsx ile senkronize edildi
+        const validRoles = ['companion', 'provider', 'model', 'escort', 'refakatçi', 'refakatci', 'refakat', 'agent', 'agency'];
+        const isCompanion = !role || role === "" || role === "user" || validRoles.some(r => role.includes(r));
+
         // GÖRÜNME ŞARTI: RealProfiles.tsx ile senkronize edildi.
-        if (isInvisible || raw.deletedAt || isExplicitlyPassive || !isApproved || !hasProfile) {
-          console.error("Profile not visible (restricted):", { id, deletedAt: raw.deletedAt, isInvisible, isExplicitlyPassive, isApproved, hasProfile });
+        if (isInvisible || raw.deletedAt || isExplicitlyPassive || !isApproved || !hasProfile || !isCompanion) {
+          console.error("Profile not visible (restricted):", { id, deletedAt: raw.deletedAt, isInvisible, isExplicitlyPassive, isApproved, hasProfile, isCompanion });
           setProfile(null);
           setLoading(false);
           return;

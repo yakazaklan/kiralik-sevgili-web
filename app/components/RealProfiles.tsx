@@ -393,27 +393,33 @@ export default function RealProfiles({ filter, city, gender }: RealProfilesProps
 
         if (city !== "all") {
           const searchCityNormalized = normalizeString(city);
-          const cityFiltered = filtered.filter(p => {
+          filtered = filtered.filter(p => {
             const pCityNorm = normalizeString(p.city || "");
             const pDistrictNorm = normalizeString(p.district || "");
-            if (searchCityNormalized === "alanya") return pCityNorm === "alanya" || pDistrictNorm.includes("alanya");
-            if (searchCityNormalized === "antalya") return pCityNorm === "antalya" || pCityNorm === "alanya";
-            return pCityNorm === searchCityNormalized || pDistrictNorm === searchCityNormalized;
-          });
 
-          // Eğer seçilen şehirde hiç ilan yoksa, boş sayfa göstermek yerine
-          // tüm ilanları göster (Teşhis amaçlı)
-          if (cityFiltered.length > 0) {
-            filtered = cityFiltered;
-          } else {
-            console.log(`${city} için ilan bulunamadı, tüm liste gösteriliyor.`);
-          }
+            // Tam eşleşme veya ilçe eşleşmesi
+            const isCityMatch = pCityNorm === searchCityNormalized;
+            const isDistrictMatch = pDistrictNorm === searchCityNormalized;
+
+            // Özel durum: Alanya/Antalya ayrımı
+            // Eğer aranan şehir antalya ise, sadece antalya olanları getir (alanya hariç)
+            // Eğer aranan şehir alanya ise, sadece alanya olanları getir
+            if (searchCityNormalized === "alanya") {
+              return pCityNorm === "alanya" || pDistrictNorm.includes("alanya");
+            }
+            if (searchCityNormalized === "antalya") {
+              // @ts-ignore - TS thinks searchCityNormalized is a constant string but it comes from props
+              return pCityNorm === "antalya" && !pDistrictNorm.includes("alanya") && pCityNorm !== "alanya";
+            }
+
+            return isCityMatch || isDistrictMatch;
+          });
         }
 
         // Tier-based shuffling logic
-        const diamond = filtered.filter(p => p.level === 'diamond').sort(() => Math.random() - 0.5);
-        const vip = filtered.filter(p => p.level === 'vip').sort(() => Math.random() - 0.5);
-        const gold = filtered.filter(p => p.level === 'gold').sort(() => Math.random() - 0.5);
+        const diamond = filtered.filter(p => p.level === 'diamond');
+        const vip = filtered.filter(p => p.level === 'vip');
+        const gold = filtered.filter(p => p.level === 'gold');
 
         setProfiles([...diamond, ...vip, ...gold]);
       } catch (err) {
