@@ -252,7 +252,16 @@ export default function ProfileClient() {
 
         // Rol Filtresi: RealProfiles.tsx ile senkronize edildi
         const validRoles = ['companion', 'provider', 'model', 'escort', 'refakatçi', 'refakatci', 'refakat', 'agent', 'agency'];
-        const isCompanion = !role || role === "" || role === "user" || validRoles.some(r => role.includes(r));
+
+        // 'user' rolündekiler kesinlikle gösterilmez
+        if (role === 'user' || role === 'seeker') {
+           console.error("Profile not visible: user/seeker role restricted");
+           setProfile(null);
+           setLoading(false);
+           return;
+        }
+
+        const isCompanion = !role || role === "" || validRoles.some(r => role.includes(r));
 
         const isListingPendingApproval = raw.isListingPendingApproval === true || nested.isListingPendingApproval === true || data.isListingPendingApproval === true;
 

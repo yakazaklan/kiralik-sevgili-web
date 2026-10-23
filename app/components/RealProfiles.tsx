@@ -461,8 +461,8 @@ export default function RealProfiles({ filter, city, gender, ageRange }: RealPro
 
           // 5. Şart: Rol Kontrolü (Sadece companion ve türevleri)
           const validRoles = ['companion', 'provider', 'model', 'escort', 'refakatçi', 'refakatci', 'agent', 'agency'];
-          // 'user' rolündekiler kesinlikle gösterilmez
-          if (p.role === 'user') return false;
+          // 'user' veya 'seeker' rolündekiler kesinlikle gösterilmez
+          if (p.role === 'user' || p.role === 'seeker') return false;
           // Rol boşsa veya geçerli rollerden biriyse göster
           const isCompanion = !p.role || p.role === "" || validRoles.some(r => p.role?.includes(r));
           if (!isCompanion) return false;

@@ -15,6 +15,9 @@ type UserLocation = {
   isElite: boolean;
   isApproved: boolean;
   isInvisible?: boolean;
+  isListingPendingApproval?: boolean;
+  isBusy?: boolean;
+  role?: string;
 };
 
 export default function HaritaPage() {
@@ -92,18 +95,18 @@ export default function HaritaPage() {
           // HARİTA GÖRÜNME ŞARTLARI (RealProfiles ile SENKRONİZE)
           if (u.isInvisible) return false;
           if (u.isBusy) return false; // MEŞGUL İLANLARI GİZLE
-          if ((u as any).isListingPendingApproval) return false;
+          if (u.isListingPendingApproval) return false;
           if (!u.isApproved) return false;
           if (!u.isVerified) return false; // Kimlik onayı ŞART
           if (!u.isActive) return false;
           if (!u.image) return false;
           if (!u.name || u.name === 'Gizli Üye') return false;
 
-          // Rol Kontrolü
-          if (u.role === 'user') return false;
+          // Rol Kontrolü (RealProfiles ile Senkronize)
+          if (u.role === 'user' || u.role === 'seeker') return false;
           const validRoles = ['companion', 'provider', 'model', 'escort', 'refakatçi', 'refakatci', 'agent', 'agency'];
-          const isCompanion = u.role === 'companion' || validRoles.some(r => u.role?.includes(r));
-          if (!isCompanion && u.role !== "") return false;
+          const isCompanion = !u.role || u.role === "" || validRoles.some(r => u.role?.includes(r));
+          if (!isCompanion) return false;
 
           return true;
         });
