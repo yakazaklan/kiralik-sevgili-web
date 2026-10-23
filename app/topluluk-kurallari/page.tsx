@@ -94,13 +94,23 @@ export default function ToplulukKurallari() {
 
           <div>
             <h2 className="text-xl font-black uppercase tracking-wider text-gray-200">
-              6. Kural ihlalleri
+              6. Çocuk Güvenliği (CSAM ve CSAE)
+            </h2>
+
+            <p className="mt-3 leading-7 text-gray-400 font-medium">
+              Çocuk istismarı materyalleri (CSAM), çocukların cinsel sömürüsü (CSAE) veya reşit olmayanlara yönelik herhangi bir istismar/kandırma (grooming) girişimi konusunda sıfır tolerans politikamız bulunmaktadır. Kiralık Sevgili, 18 yaş altı kişilerin kullanımına kapalıdır. Bu tür durumlar derhal <strong>35serinkaratas@gmail.com</strong> adresine bildirilmeli ve istisnasız olarak NCMEC ile yasal makamlara rapor edilecektir. Ayrıntılı bilgi için <a href="/cocuk-guvenligi" className="underline text-[#d4af37]">Çocuk Güvenliği Standartlarımızı</a> inceleyin.
+            </p>
+          </div>
+
+          <div>
+            <h2 className="text-xl font-black uppercase tracking-wider text-gray-200">
+              7. Kural ihlalleri
             </h2>
 
             <p className="mt-3 leading-7 text-gray-400 font-medium">
               Topluluk kurallarını ihlal eden içerikler kaldırılabilir
               ve ihlalin niteliğine göre ilgili kullanıcı hesabı
-              sınırlandırılabilir veya kapatılabilir.
+              sınırlandırılabilir veya kapatılabilir. Bildirimleriniz için <strong>35serinkaratas@gmail.com</strong> adresini kullanabilirsiniz.
             </p>
           </div>
         </section>

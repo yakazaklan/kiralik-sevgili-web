@@ -108,19 +108,28 @@ export default function Gizlilik() {
 
           <div>
             <h2 className="text-xl font-black uppercase tracking-wider text-gray-200">
-              7. Kullanıcı hakları
+              7. Çocuk Güvenliği ve Çocuk İstismarı İle Mücadele (CSAM)
+            </h2>
+            <p className="mt-3 leading-7 text-gray-400 font-medium">
+              Kiralık Sevgili, çocukların cinsel istismarına yönelik materyallere (CSAM) ve reşit olmayanların korunmasına karşı sıfır tolerans politikası izler. 18 yaş altındaki bireylerin platformu kullanması kesinlikle yasaktır. CSAM veya reşit olmayanlara yönelik herhangi bir şüpheli durumu bildirmek için doğrudan <strong>yakazago@gmail.com</strong> adresi üzerinden bizimle iletişime geçebilirsiniz. Ayrıntılı bilgi için <a href="/cocuk-guvenligi" className="underline text-[#d4af37]">Çocuk Güvenliği Politikamızı</a> inceleyin.
+            </p>
+          </div>
+
+          <div>
+            <h2 className="text-xl font-black uppercase tracking-wider text-gray-200">
+              8. Kullanıcı hakları
             </h2>
             <p className="mt-3 leading-7 text-gray-400 font-medium">
               Kullanıcılar kişisel verileriyle ilgili yürürlükteki
-              mevzuattan doğan haklarını kullanabilir. Talepler için
-              platformun iletişim kanallarından bizimle iletişime
+              mevzuattan doğan haklarını kullanabilir. Talepler ve gizlilik bildirimleri için
+              <strong> yakazago@gmail.com</strong> adresi üzerinden bizimle iletişime
               geçilebilir.
             </p>
           </div>
 
           <div>
             <h2 className="text-xl font-black uppercase tracking-wider text-gray-200">
-              8. Politika değişiklikleri
+              9. Politika değişiklikleri
             </h2>
             <p className="mt-3 leading-7 text-gray-400 font-medium">
               Hizmetlerimizin veya yasal yükümlülüklerimizin değişmesi

@@ -15,7 +15,7 @@ service firebase.storage {
     // Admin yetkisi (Email bazlı veya Firestore rolü bazlı)
     // Firestore lookup maliyetli olabilir, bu yüzden en güvenli yol budur.
     function isAdmin() {
-      return isSignedIn() && request.auth.token.email == '35serinkaratas@gmail.com';
+      return isSignedIn() && request.auth.token.email == 'yakazago@gmail.com';
     }
 
     // --- MEVCUT KURALLAR ---

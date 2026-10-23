@@ -195,6 +195,7 @@ export default function Home() {
         <div className="mx-auto max-w-[1600px] px-6 text-center">
           <div className="flex flex-wrap justify-center gap-6 mb-6">
             <Link href="/gizlilik" className="text-[8px] font-black text-white/40 hover:text-[#d4af37] uppercase tracking-[0.2em] transition-colors">Gizlilik Politikası</Link>
+            <Link href="/cocuk-guvenligi" className="text-[8px] font-black text-red-500/60 hover:text-red-500 uppercase tracking-[0.2em] transition-colors">Çocuk Güvenliği</Link>
             <Link href="/kullanim-sartlari" className="text-[8px] font-black text-white/40 hover:text-[#d4af37] uppercase tracking-[0.2em] transition-colors">Kullanım Şartları</Link>
             <Link href="/hesap-silme" className="text-[8px] font-black text-[#d4af37] hover:text-white uppercase tracking-[0.2em] transition-colors">Hesap Silme</Link>
             <Link href="/iletisim" className="text-[8px] font-black text-white/40 hover:text-[#d4af37] uppercase tracking-[0.2em] transition-colors">İletişim</Link>

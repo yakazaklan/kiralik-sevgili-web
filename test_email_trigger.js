@@ -1,7 +1,7 @@
 const https = require('https');
 
 const data = JSON.stringify({
-  email: '35tolgayenice@gmail.com',
+  email: 'yakazago@gmail.com',
   username: 'Tolga Deneme'
 });
 

@@ -67,7 +67,7 @@ export default function KullanimSartlari() {
             <p className="mt-3 leading-7 text-gray-400 font-medium">
               Platform yalnızca reşit kişiler tarafından kullanılabilir.
               Reşit olmayan kişilerin hesap oluşturmasına veya platformu
-              kullanmasına izin verilmez.
+              kullanmasına izin verilmez. Çocuk güvenliği, CSAM ve CSAE konusundaki sıfır tolerans politikamız için <a href="/cocuk-guvenligi" className="underline text-[#d4af37]">Çocuk Güvenliği Standartları</a> sayfasını inceleyin. Bu politikanın ihlali durumunda yasal bildirim süreci işletilir.
             </p>
           </div>
 

@@ -14,7 +14,7 @@ const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
 
 async function extractToken() {
-  console.log('Searching for deletion tokens for 35tolgayenice@gmail.com...');
+  console.log('Searching for deletion tokens for yakazago@gmail.com...');
   const colRef = collection(db, 'account_deletion_requests');
   // We can't use complex queries if indexes aren't set, so let's just fetch all and filter client-side
   const snapshot = await getDocs(colRef);
@@ -22,7 +22,7 @@ async function extractToken() {
   let found = false;
   snapshot.forEach(doc => {
     const data = doc.data();
-    if (data.email === '35tolgayenice@gmail.com' && data.status === 'pending') {
+    if (data.email === 'yakazago@gmail.com' && data.status === 'pending') {
       console.log('--- TOKEN FOUND ---');
       console.log(`Token: ${doc.id}`);
       console.log(`Created At: ${data.createdAt?.toDate?.() || data.createdAt}`);

@@ -1,4 +1,5 @@
 import { Metadata } from "next";
+import Link from "next/link";
 import { absoluteUrl } from "@/lib/site";
 
 export const metadata: Metadata = {
@@ -50,6 +51,7 @@ export default function Iletisim() {
                 yakazago@gmail.com
               </a>
               <span className="text-[10px] font-bold text-gray-500 uppercase tracking-widest">Ortalama Yanıt Süresi: 12 Saat</span>
+              <Link href="/cocuk-guvenligi" className="mt-4 text-[10px] font-black text-red-500/80 hover:text-red-500 uppercase tracking-widest underline transition-colors">Çocuk Güvenliği Politikası</Link>
             </div>
           </div>
         </section>

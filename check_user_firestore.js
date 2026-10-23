@@ -14,7 +14,7 @@ const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
 
 async function checkUser() {
-  const email = '35tolgayenice@gmail.com';
+  const email = 'yakazago@gmail.com';
   console.log(`Checking Firestore users collection for: ${email}`);
 
   const colRef = collection(db, 'users');

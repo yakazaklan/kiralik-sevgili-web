@@ -1,11 +1,12 @@
 "use client";
 
 import { useEffect, useState, useRef } from "react";
-import { doc, getDoc, setDoc, updateDoc, serverTimestamp, collection, query, where, getDocs, addDoc, onSnapshot } from "firebase/firestore";
+import { doc, getDoc, setDoc, updateDoc, serverTimestamp, collection, query, where, getDocs, addDoc, onSnapshot, runTransaction, increment } from "firebase/firestore";
 import { ref as storageRef, uploadBytes, getDownloadURL } from "firebase/storage";
 import { useParams, useRouter } from "next/navigation";
 import { db, auth, storage } from "../../../lib/firebase";
 import { onAuthStateChanged, User } from "firebase/auth";
+import { SecurityHelper } from "../../../lib/security";
 
 type Profile = {
   id: string;
@@ -71,6 +72,8 @@ export default function ProfileClient() {
   const [sendingRequest, setSendingRequest] = useState(false);
   const [showReportMenu, setShowReportMenu] = useState(false);
   const [isReporting, setIsReporting] = useState(false);
+  const [showConnectModal, setShowConnectModal] = useState(false);
+  const [connectMessage, setConnectMessage] = useState("");
 
   useEffect(() => {
     if (!id || id === "ilan-detay") return;
@@ -345,8 +348,15 @@ export default function ProfileClient() {
 
     if (currentUser.uid === id) return;
 
+    const message = connectMessage.trim();
+    if (!message) {
+      alert("Bağlantı isteği göndermek için bir mesaj yazmalısınız.");
+      return;
+    }
+
     setSendingRequest(true);
     try {
+      const sanitizedMessage = SecurityHelper.sanitizeMessage(message);
       const sId = currentUser.uid;
       const rId = id;
       const chatId = [sId, rId].sort().join("_");
@@ -354,46 +364,91 @@ export default function ProfileClient() {
       // Get sender info
       const senderSnap = await getDoc(doc(db, "users", sId));
       const senderData = senderSnap.data() || {};
-
-      // Mobil uygulamanın ve webin beklediği tüm olası ad alanlarını kontrol et
       const senderName = senderData.name || senderData.displayName || senderData.full_name || currentUser.displayName || "Bir Üye";
-
-      // Profil fotoğrafı için öncelik sırası
       const nested = senderData.profile || {};
       const combined = { ...senderData, ...nested };
       const senderPhoto = combined.profileImageUrl || combined.photoUrl || combined.profilePhoto || combined.photoURL || combined.image || (combined.photos && combined.photos[0]) || (combined.photoUrls && combined.photoUrls[0]) || currentUser.photoURL;
 
-      // 1. Create message request
-      await setDoc(doc(db, "message_requests", chatId), {
-        id: chatId,
-        senderId: sId,
-        senderName,
-        senderPhoto: senderPhoto || null,
-        receiverId: rId,
-        initialMessage: "Sizinle bağlantı kurmak istiyor.",
-        status: "pending",
-        isRead: false,
-        updatedAt: serverTimestamp(),
-        createdAt: serverTimestamp(),
-      }, { merge: true });
+      await runTransaction(db, async (transaction) => {
+        const requestRef = doc(db, "message_requests", chatId);
+        const chatRef = doc(db, "chats", chatId);
 
-      // 2. Create/Update chat metadata
-      await setDoc(doc(db, "chats", chatId), {
-        chatId: chatId,
-        participants: [sId, rId],
-        lastMessage: "Yeni bir bağlantı isteği gönderildi.",
-        lastMessageTime: serverTimestamp(),
-        lastMessageSenderId: sId,
-        senderName: senderName,
-        senderPhoto: senderPhoto || null,
-        receiverId: rId,
-        isActive: false,
-        requestStatus: "pending",
-        updatedAt: serverTimestamp(),
-        deletedBy: {}, // Clear any previous deletion flags
-        [`unreadCount.${rId}`]: 1,
-        [`unreadCount.${sId}`]: 0,
-      }, { merge: true });
+        const requestSnap = await transaction.get(requestRef);
+        const chatSnap = await transaction.get(chatRef);
+
+        // Data Integrity: Check for existing pending request (matches Android logic)
+        if (requestSnap.exists()) {
+          const data = requestSnap.data() as any;
+          if (data.status === 'pending') {
+            throw new Error('Zaten bekleyen bir bağlantı isteğiniz bulunuyor.');
+          }
+
+          if (data.status === 'rejected') {
+            const updatedAt = data.updatedAt?.toDate() || new Date();
+            const now = new Date();
+            const diffDays = (now.getTime() - updatedAt.getTime()) / (1000 * 3600 * 24);
+            if (diffDays < 7) {
+              throw new Error('Bu kullanıcı isteğinizi reddetti. Lütfen bir süre sonra tekrar deneyin.');
+            }
+          }
+        }
+
+        // 1. message_requests update
+        const requestData: any = {
+          id: chatId,
+          senderId: sId,
+          senderName,
+          senderPhoto: senderPhoto || null,
+          receiverId: rId,
+          initialMessage: sanitizedMessage,
+          status: "pending",
+          isRead: false,
+          updatedAt: serverTimestamp(),
+          deletedBy: {
+            [rId]: false,
+            [sId]: false,
+          },
+        };
+        if (!requestSnap.exists()) {
+          requestData.createdAt = serverTimestamp();
+        }
+        transaction.set(requestRef, requestData, { merge: true });
+
+        // 2. chats update
+        const chatExists = chatSnap.exists();
+        const existingChatData = chatSnap.data();
+        const isAlreadyAccepted = chatExists && existingChatData?.requestStatus === 'accepted';
+
+        if (!isAlreadyAccepted) {
+          const participants = [sId, rId];
+          transaction.set(chatRef, {
+            chatId: chatId,
+            participants: participants,
+            users: participants, // Security rules requirement
+            lastMessage: sanitizedMessage,
+            lastMessageTime: serverTimestamp(),
+            lastMessageSenderId: sId,
+            senderName: senderName,
+            senderPhoto: senderPhoto || null,
+            receiverId: rId,
+            isActive: false,
+            requestStatus: "pending",
+            updatedAt: serverTimestamp(),
+            deletedBy: { [sId]: false, [rId]: false },
+            [`unreadCount.${rId}`]: increment(1),
+            [`unreadCount.${sId}`]: 0,
+          }, { merge: true });
+        } else {
+          // If already accepted, just update last message and increment unread
+          transaction.update(chatRef, {
+            lastMessage: sanitizedMessage,
+            lastMessageTime: serverTimestamp(),
+            lastMessageSenderId: sId,
+            [`unreadCount.${rId}`]: increment(1),
+            updatedAt: serverTimestamp(),
+          });
+        }
+      });
 
       // 3. Send Notification for mobile
       const title = 'Yeni Bağlantı İsteği';
@@ -451,6 +506,8 @@ export default function ProfileClient() {
       });
 
       setRequestStatus("pending");
+      setShowConnectModal(false);
+      setConnectMessage("");
       alert("Bağlantı isteği gönderildi!");
     } catch (error) {
       console.error("Request error:", error);
@@ -615,7 +672,7 @@ export default function ProfileClient() {
                   <div className="flex flex-col gap-2">
                     {(requestStatus === "none" || requestStatus === "deleted" || requestStatus === "rejected") ? (
                       <button
-                        onClick={handleConnect}
+                        onClick={() => setShowConnectModal(true)}
                         disabled={sendingRequest}
                         className="w-full bg-white text-black font-black py-5 rounded-[1.5rem] hover:bg-[#d4af37] hover:scale-105 transition-all shadow-2xl flex items-center justify-center gap-3 text-xs tracking-widest"
                       >
@@ -747,6 +804,53 @@ export default function ProfileClient() {
              </div>
           </div>
         </div>
+
+        {/* Connect Message Modal */}
+        {showConnectModal && (
+          <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/80 backdrop-blur-md animate-in fade-in duration-300">
+            <div className="w-full max-w-lg bg-[#0a0a0a] border border-white/10 rounded-[2.5rem] shadow-[0_20px_50px_rgba(0,0,0,0.5)] overflow-hidden">
+              <div className="p-8 border-b border-white/5 bg-gradient-to-br from-[#d4af37]/10 to-transparent flex justify-between items-center">
+                <div>
+                  <h3 className="text-sm font-black text-white uppercase tracking-[0.2em]">Bağlantı İsteği</h3>
+                  <p className="text-[9px] text-[#d4af37] font-bold tracking-widest uppercase mt-0.5">{profile?.name} ile tanışın</p>
+                </div>
+                <button
+                  onClick={() => setShowConnectModal(false)}
+                  className="w-10 h-10 rounded-full bg-white/5 flex items-center justify-center text-white/40 hover:text-white transition-all"
+                >
+                  ✕
+                </button>
+              </div>
+
+              <div className="p-8 space-y-6">
+                <div className="space-y-3">
+                  <label className="text-[10px] font-black text-gray-500 uppercase tracking-[0.3em]">Mesajınız (Zorunlu)</label>
+                  <textarea
+                    value={connectMessage}
+                    onChange={(e) => setConnectMessage(e.target.value)}
+                    placeholder="Merhaba, sizinle tanışmak istiyorum..."
+                    className="w-full h-40 bg-white/[0.03] border border-white/10 rounded-2xl p-5 text-sm text-white placeholder:text-gray-700 outline-none focus:border-[#d4af37]/50 transition-all resize-none"
+                    maxLength={500}
+                  />
+                  <div className="flex justify-between items-center">
+                    <p className="text-[9px] text-gray-600 font-bold uppercase tracking-widest">
+                      {connectMessage.trim().length > 0 ? `${connectMessage.length} karakter` : "Mesaj yazılması zorunludur"}
+                    </p>
+                    <p className="text-[9px] text-gray-600 font-bold uppercase tracking-widest">Maks 500</p>
+                  </div>
+                </div>
+
+                <button
+                  onClick={handleConnect}
+                  disabled={sendingRequest || !connectMessage.trim()}
+                  className="w-full bg-[#d4af37] text-black font-black py-5 rounded-[1.5rem] hover:scale-[1.02] active:scale-[0.98] transition-all shadow-[0_10px_30px_rgba(212,175,55,0.2)] flex items-center justify-center gap-3 text-xs tracking-widest uppercase disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:scale-100"
+                >
+                  {sendingRequest ? "GÖNDERİLİYOR..." : "İSTEĞİ GÖNDER"}
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
       </div>
     </main>
   );

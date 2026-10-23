@@ -51,7 +51,8 @@ export default function HaritaPage() {
 
           // Onay durumunu Android ile eşzamanlı kontrol et
           const isApproved = raw.isApproved === true || String(raw.isApproved) === "true" ||
-                            nested.isApproved === true || String(nested.isApproved) === "true";
+                            nested.isApproved === true || String(nested.isApproved) === "true" ||
+                            rStatus === "approved" || nStatus === "approved";
 
           // Sadece açıkça false ise pasif say
           const isExplicitlyPassive = raw.isActive === false || String(raw.isActive) === "false" ||
@@ -104,7 +105,7 @@ export default function HaritaPage() {
 
           // Rol Kontrolü (RealProfiles ile Senkronize)
           if (u.role === 'user' || u.role === 'seeker') return false;
-          const validRoles = ['companion', 'provider', 'model', 'escort', 'refakatçi', 'refakatci', 'agent', 'agency'];
+          const validRoles = ['companion', 'provider', 'model', 'escort', 'refakatçi', 'refakatci', 'refakat', 'agent', 'agency'];
           const isCompanion = !u.role || u.role === "" || validRoles.some(r => u.role?.includes(r));
           if (!isCompanion) return false;
 

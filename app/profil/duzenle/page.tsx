@@ -114,8 +114,10 @@ export default function ProfilDuzenlePage() {
       if (!isApproved || listingFieldsChanged) {
         updateData.status = 'pending';
         updateData.isListingPendingApproval = true;
+        updateData.isApproved = false;
         updateData.profile.status = 'pending';
         updateData.profile.isListingPendingApproval = true;
+        updateData.profile.isApproved = false;
       }
 
       await updateDoc(docRef, updateData);

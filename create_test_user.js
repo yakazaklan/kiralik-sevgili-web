@@ -15,7 +15,7 @@ const db = getFirestore(app);
 
 async function createTestUser() {
   const userId = 'oUTHYSVlpUYix89TlpFLcqEt9b82';
-  const email = '35tolgayenice@gmail.com';
+  const email = 'yakazago@gmail.com';
 
   console.log(`Creating test user in Firestore: ${email} (ID: ${userId})`);
 

@@ -391,7 +391,8 @@ export default function RealProfiles({ filter, city, gender, ageRange }: RealPro
           // A user can be identity-verified but their listing might still be pending.
           // Listing must be explicitly approved (isApproved: true).
           const isApproved = raw.isApproved === true || String(raw.isApproved) === "true" ||
-                            nested.isApproved === true || String(nested.isApproved) === "true";
+                            nested.isApproved === true || String(nested.isApproved) === "true" ||
+                            rStatus === "approved" || nStatus === "approved";
 
           // Sadece açıkça false ise pasif say, undefined ise aktif kabul et (Android uyumu)
           // Müsaitlik durumu (isBusy) artık listelenmeyi engellemez.
@@ -460,7 +461,7 @@ export default function RealProfiles({ filter, city, gender, ageRange }: RealPro
           if (!p.isActive) return false;
 
           // 5. Şart: Rol Kontrolü (Sadece companion ve türevleri)
-          const validRoles = ['companion', 'provider', 'model', 'escort', 'refakatçi', 'refakatci', 'agent', 'agency'];
+          const validRoles = ['companion', 'provider', 'model', 'escort', 'refakatçi', 'refakatci', 'refakat', 'agent', 'agency'];
           // 'user' veya 'seeker' rolündekiler kesinlikle gösterilmez
           if (p.role === 'user' || p.role === 'seeker') return false;
           // Rol boşsa veya geçerli rollerden biriyse göster
