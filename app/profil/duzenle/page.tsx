@@ -70,9 +70,17 @@ export default function ProfilDuzenlePage() {
       // Get current profile data to check approval status
       const docSnap = await getDoc(docRef);
       const currentData = docSnap.exists() ? docSnap.data() : {};
+      const nested = currentData.profile || {};
 
-      // If not already approved, set status to pending for review
       const isApproved = currentData.isApproved === true || currentData.isApproved === "true" || currentData.status === "approved";
+
+      // KRİTİK: İlan Bilgileri (Onay Gerektirenler)
+      // Normal profil bilgilerini değiştirmek (isim, yaş) tek başına ilanı yeniden onaya göndermez.
+      const listingFieldsChanged =
+        (currentData.bio || nested.bio || "") !== bio ||
+        (currentData.gender || nested.gender || "") !== gender ||
+        (currentData.city || nested.city || "") !== city ||
+        (currentData.district || nested.district || "") !== district;
 
       const updateData: any = {
         name,
@@ -99,8 +107,11 @@ export default function ProfilDuzenlePage() {
         }
       };
 
-      // If not approved, trigger the approval flow like the mobile app
-      if (!isApproved) {
+      // KESİN KURAL:
+      // 1. İlk defa oluşturulan ilan admin onayı bekler (!isApproved).
+      // 2. Onaylı bir ilan kritik alanları (bio, konum, cinsiyet) değiştirirse tekrar onaya girer (isListingPendingApproval = true).
+      // 3. Değişiklikler onaylanana kadar ilan listelerden gizlenir.
+      if (!isApproved || listingFieldsChanged) {
         updateData.status = 'pending';
         updateData.isListingPendingApproval = true;
         updateData.profile.status = 'pending';
@@ -108,7 +119,13 @@ export default function ProfilDuzenlePage() {
       }
 
       await updateDoc(docRef, updateData);
-      alert("Profil güncellendi. Onaylanmış profiliniz yoksa incelemeye alınacaktır.");
+
+      if (!isApproved || listingFieldsChanged) {
+        alert("Değişiklikler kaydedildi. İlanınız admin onayından sonra tekrar yayımlanacaktır.");
+      } else {
+        alert("Profil güncellendi.");
+      }
+
       router.push('/profil');
     } catch (error) {
       console.error("Update error:", error);
