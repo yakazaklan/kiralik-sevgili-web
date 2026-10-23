@@ -108,8 +108,7 @@ export default function CityClient({ citySlug }: CityClientProps) {
             <h2 className="text-3xl font-black tracking-tighter uppercase">
               {cityData.slug === 'alanya' ? '🔥 Alanya\'da Aktif Profiller' : `${cityName} Aktif İlanlar`}
             </h2>
-            <div className="hidden sm:flex items-center gap-2 px-4 py-2 rounded-full border border-white/5 bg-white/5 text-[10px] font-black text-gray-400">
-              <span className="w-2 h-2 rounded-full bg-[#d4af37] animate-pulse"></span>
+            <div className="hidden sm:flex items-center gap-2 px-4 py-2 rounded-full border border-white/5 bg-white/5 text-[10px] font-black text-gray-400 uppercase tracking-widest">
               GÜNCEL LİSTE
             </div>
           </div>

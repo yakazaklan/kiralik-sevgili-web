@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import Link from "next/link";
 import RealProfiles from "./components/RealProfiles";
 import CitySelector from "./components/CitySelector";
+import AgeRangeSlider from "./components/AgeRangeSlider";
 import { CITIES, slugify } from "@/lib/turkey-zones";
 
 import { SITE_URL, absoluteUrl } from "@/lib/site";
@@ -14,10 +15,29 @@ const PREFERRED_CITIES = ["İstanbul", "Ankara", "İzmir", "Antalya", "Alanya", 
 
 export default function Home() {
   const router = useRouter();
-  const [filter, setFilter] = useState("all");
-  const [genderFilter, setGenderFilter] = useState("all");
+  const [filter, setFilter] = useState("all"); // "all" | "verifiedOnly"
+  const [genderFilter, setGenderFilter] = useState<string[]>(["Kadın", "Erkek", "Çift"]);
   const [cityFilter, setCityFilter] = useState("all");
+  const [ageRange, setAgeRange] = useState({ min: 18, max: 60 });
   const [isLocating, setIsLocating] = useState(false);
+
+  const toggleGender = (g: string) => {
+    setGenderFilter(prev => {
+      if (prev.includes(g)) {
+        if (prev.length === 1) return prev; // En az biri seçili kalmalı
+        return prev.filter(item => item !== g);
+      } else {
+        return [...prev, g];
+      }
+    });
+  };
+
+  const handleAgeChange = React.useCallback((min: number, max: number) => {
+    setAgeRange(prev => {
+      if (prev.min === min && prev.max === max) return prev;
+      return { min, max };
+    });
+  }, []);
 
   // JSON-LD Structured Data
   const jsonLd = {
@@ -77,11 +97,10 @@ export default function Home() {
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(organizationLd) }} />
 
       {/* COMPACT HERO SECTION */}
-      <section className="relative pt-16 pb-12 overflow-hidden border-b border-white/5 bg-[#050505]">
+      <section className="relative pt-6 pb-2 overflow-hidden border-b border-white/5 bg-[#050505]">
         <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_0%,rgba(212,175,55,0.08),transparent_70%)] pointer-events-none"></div>
         <div className="mx-auto max-w-[1600px] px-6 text-center relative z-10">
-          <div className="inline-flex items-center gap-2 rounded-full bg-white/[0.03] backdrop-blur-3xl px-6 py-2 text-[8px] font-black text-[#d4af37] uppercase tracking-[0.4em] border border-[#d4af37]/20 mb-8">
-            <span className="w-1.5 h-1.5 rounded-full bg-[#d4af37] animate-pulse"></span>
+          <div className="inline-flex items-center gap-2 rounded-full bg-white/[0.03] backdrop-blur-3xl px-6 py-2 text-[8px] font-black text-[#d4af37] uppercase tracking-[0.4em] border border-[#d4af37]/20 mb-4">
             TÜRKİYE'NİN PRESTİJLİ SOSYAL PLATFORMU
           </div>
           <h1 className="text-xl md:text-2xl lg:text-3xl font-black tracking-tight text-white mb-3 uppercase leading-[1.1]">
@@ -94,12 +113,12 @@ export default function Home() {
       </section>
 
       <section className="pb-20 bg-black">
-        <div className="mx-auto max-w-[1600px] px-6 space-y-12">
+        <div className="mx-auto max-w-[1600px] px-6 space-y-4">
           {/* Şehir Seçimi Paneli */}
-          <div className="relative -mt-8 z-20">
-            <div className="p-6 md:p-8 rounded-[2rem] bg-[#080808] border border-white/5 shadow-2xl">
+          <div className="relative -mt-4 z-20">
+            <div className="p-2 md:p-3 rounded-[2rem] bg-[#080808] border border-white/5 shadow-2xl">
               <CitySelector />
-              <div className="mt-8 flex flex-wrap items-center justify-center gap-2">
+              <div className="mt-2 flex flex-wrap items-center justify-center gap-2">
                 <Link href="/" className={`rounded-xl border px-5 py-2.5 text-[8px] font-black transition-all tracking-widest ${cityFilter === "all" ? "border-[#d4af37] text-[#d4af37] bg-[#d4af37]/5" : "border-white/5 text-white/40 hover:text-white"}`}>TÜRKİYE GENELİ</Link>
                 {PREFERRED_CITIES.map(city => (
                   <Link key={city} href={city.toLowerCase() === "alanya" ? "/antalya/alanya" : `/${slugify(city)}`} className={`rounded-xl border px-5 py-2.5 text-[8px] font-black transition-all tracking-widest ${cityFilter.toLowerCase() === city.toLowerCase() ? "border-[#d4af37] text-[#d4af37] bg-[#d4af37]/5" : "border-white/5 text-white/40 hover:text-white"}`}>{city.toUpperCase()}</Link>
@@ -112,27 +131,63 @@ export default function Home() {
           <div className="flex flex-col items-center justify-between gap-4 lg:flex-row pt-4 border-t border-white/5">
             <div className="text-center lg:text-left space-y-1">
               <div className="flex items-center gap-2 justify-center lg:justify-start">
-                <div className="w-6 h-[1px] bg-[#d4af37]"></div>
-                <span className="text-[7px] font-black text-[#d4af37] uppercase tracking-[0.3em]">SEÇKİ</span>
+                <span className="text-[7px] font-black text-white/40 uppercase tracking-[0.3em]">SEÇKİ</span>
               </div>
               <h2 className="text-lg font-black uppercase text-white">{cityFilter === "all" ? "TÜRKİYE" : cityFilter.toUpperCase()} ÖZEL</h2>
             </div>
 
             <div className="flex flex-col sm:flex-row items-center gap-3">
+              <AgeRangeSlider min={18} max={60} onChange={handleAgeChange} />
+
               <div className="flex items-center gap-1 rounded-full bg-white/[0.03] p-1 border border-white/10">
-                {["all", "Kadın", "Erkek", "Çift"].map((g) => (
-                  <button key={g} onClick={() => setGenderFilter(g)} className={`rounded-full px-5 py-2 text-[8px] font-black tracking-widest transition-all ${genderFilter === g ? "bg-white text-black" : "text-white/40 hover:text-white"}`}>{g === "all" ? "HEPSİ" : g.toUpperCase()}</button>
-                ))}
+                {["Kadın", "Erkek", "Çift"].map((g) => {
+                  const isActive = genderFilter.includes(g);
+                  let activeClass = "bg-white text-black shadow-lg shadow-white/10";
+
+                  if (isActive) {
+                    if (g === "Kadın") activeClass = "bg-pink-500 text-white shadow-lg shadow-pink-500/20";
+                    else if (g === "Erkek") activeClass = "bg-blue-500 text-white shadow-lg shadow-blue-500/20";
+                    else if (g === "Çift") activeClass = "bg-yellow-500 text-black shadow-lg shadow-yellow-500/20";
+                  }
+
+                  return (
+                    <button
+                      key={g}
+                      onClick={() => toggleGender(g)}
+                      className={`rounded-full px-5 py-2 text-[8px] font-black tracking-widest transition-all duration-300 ${
+                        isActive ? activeClass : "text-white/60 hover:text-white hover:bg-white/5"
+                      }`}
+                    >
+                      {g.toUpperCase()}
+                    </button>
+                  );
+                })}
               </div>
               <div className="flex items-center gap-1 rounded-full bg-white/[0.03] p-1 border border-white/10">
-                {["all", "elite", "verified"].map((f) => (
-                  <button key={f} onClick={() => setFilter(f)} className={`rounded-full px-5 py-2 text-[8px] font-black tracking-widest transition-all ${filter === f ? "bg-[#d4af37] text-black" : "text-white/40 hover:text-white"}`}>{f === "all" ? "TÜMÜ" : f.toUpperCase()}</button>
-                ))}
+                {[
+                  { id: "all", label: "TÜMÜ" },
+                  { id: "verifiedOnly", label: "SADECE ONAYLILAR" }
+                ].map((f) => {
+                  const isActive = filter === f.id;
+                  return (
+                    <button
+                      key={f.id}
+                      onClick={() => setFilter(f.id)}
+                      className={`rounded-full px-5 py-2 text-[8px] font-black tracking-widest transition-all duration-300 ${
+                        isActive
+                          ? "bg-yellow-400/90 text-black shadow-lg shadow-yellow-400/20"
+                          : "text-white/60 hover:text-white hover:bg-white/5"
+                      }`}
+                    >
+                      {f.label}
+                    </button>
+                  );
+                })}
               </div>
             </div>
           </div>
 
-          <RealProfiles filter={filter} city={cityFilter} gender={genderFilter} />
+          <RealProfiles filter={filter} city={cityFilter} gender={genderFilter} ageRange={ageRange} />
         </div>
       </section>
 

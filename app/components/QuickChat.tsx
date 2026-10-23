@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState, useEffect, useRef } from "react";
-import { collection, query, where, onSnapshot, getDoc, doc, orderBy, limit, addDoc, serverTimestamp, updateDoc, Timestamp } from "firebase/firestore";
+import { collection, query, where, onSnapshot, getDoc, doc, orderBy, limit, addDoc, serverTimestamp, updateDoc, Timestamp, getDocs, writeBatch } from "firebase/firestore";
 import { db, auth } from "@/lib/firebase";
 import { onAuthStateChanged } from "firebase/auth";
 
@@ -9,7 +9,21 @@ export default function QuickChat() {
   const [isOpen, setIsOpen] = useState(false);
   const [user, setUser] = useState<any>(null);
   const [unreadCount, setUnreadCount] = useState(0);
+  const prevUnreadCount = useRef(0);
   const [recentChats, setRecentChats] = useState<any[]>([]);
+
+  // Yeni mesaj geldiğinde ses çal
+  useEffect(() => {
+    if (unreadCount > prevUnreadCount.current) {
+      try {
+        const audio = new Audio('/sounds/notification.mp3');
+        audio.play().catch(e => console.log("Ses çalma başarısız (Etkileşim eksik olabilir):", e));
+      } catch (e) {
+        console.error("Audio error:", e);
+      }
+    }
+    prevUnreadCount.current = unreadCount;
+  }, [unreadCount]);
   const [activeChat, setActiveChat] = useState<any>(null);
   const [messages, setMessages] = useState<any[]>([]);
   const [newMessage, setNewMessage] = useState("");
@@ -40,15 +54,30 @@ export default function QuickChat() {
         let otherUser = { id: otherId, name: "Kullanıcı", image: "" };
 
         if (otherId) {
-          const uSnap = await getDoc(doc(db, "users", otherId));
-          if (uSnap.exists()) {
-            const uData = uSnap.data();
-            otherUser = {
-              id: otherId,
-              name: uData.name || "Kullanıcı",
-              image: uData.profileImageUrl || uData.photoUrl || ""
-            };
-          }
+            const uSnap = await getDoc(doc(db, "users", otherId));
+            if (uSnap.exists()) {
+              const uData = uSnap.data();
+              const nested = uData.profile || {};
+              // Android Parity: Root fields (uData) have priority over nested 'profile' object
+              const combined = { ...nested, ...uData };
+              const originalName = combined.name || "Kullanıcı";
+              const nickname = data.nicknames?.[user.uid];
+
+              let image = "";
+              if (Array.isArray(combined.photos) && combined.photos.length > 0) {
+                image = combined.photos[0];
+              } else if (combined.profilePhoto) {
+                image = combined.profilePhoto;
+              } else {
+                image = combined.profileImageUrl || combined.photoUrl || combined.photoURL || combined.image || combined.photo || combined.profileImage || combined.avatar || (combined.photoUrls && combined.photoUrls[0]) || "";
+              }
+
+              otherUser = {
+                id: otherId,
+                name: nickname || originalName,
+                image: image || ""
+              };
+            }
         }
 
         return {
@@ -85,8 +114,12 @@ export default function QuickChat() {
       return;
     }
 
+    const expiryHours = activeChat.expiryHours || 24;
+    const expiryTimestamp = Timestamp.fromMillis(Date.now() - (expiryHours * 60 * 60 * 1000));
+
     const msgsQ = query(
       collection(db, 'chats', activeChat.id, 'messages'),
+      where('timestamp', '>=', expiryTimestamp),
       orderBy('timestamp', 'asc'),
       limit(50)
     );
@@ -101,6 +134,23 @@ export default function QuickChat() {
         });
       }
     });
+
+    // Süresi dolan mesajları temizle
+    const cleanup = async () => {
+      try {
+        const oldMsgsQ = query(
+          collection(db, 'chats', activeChat.id, 'messages'),
+          where('timestamp', '<', expiryTimestamp)
+        );
+        const oldMsgsSnap = await getDocs(oldMsgsQ);
+        if (!oldMsgsSnap.empty) {
+          const batch = writeBatch(db);
+          oldMsgsSnap.docs.forEach(d => batch.delete(d.ref));
+          await batch.commit();
+        }
+      } catch (e) { console.error("QuickChat cleanup error:", e); }
+    };
+    cleanup();
 
     return () => unsub();
   }, [activeChat, user]);
@@ -137,11 +187,31 @@ export default function QuickChat() {
 
       // Bildirim gönder
       if (activeChat.otherUser?.id) {
+        // Profil fotoğrafı öncelik sırası
+        const userRef = doc(db, "users", user.uid);
+        const userSnap = await getDoc(userRef);
+        let senderPhoto = user.photoURL;
+
+        if (userSnap.exists()) {
+          const uData = userSnap.data();
+          const nested = uData.profile || {};
+          // Android Parity: Root fields (uData) have priority over nested 'profile' object
+          const combined = { ...nested, ...uData };
+
+          if (Array.isArray(combined.photos) && combined.photos.length > 0) {
+            senderPhoto = combined.photos[0];
+          } else if (combined.profilePhoto) {
+            senderPhoto = combined.profilePhoto;
+          } else {
+            senderPhoto = combined.profileImageUrl || combined.photoUrl || combined.profilePhoto || combined.photoURL || combined.image || combined.photo || combined.profileImage || combined.avatar || (combined.photoUrls && combined.photoUrls[0]) || user.photoURL;
+          }
+        }
+
         await addDoc(collection(db, 'notifications'), {
           receiverId: activeChat.otherUser.id,
           senderId: user.uid,
           senderName: user.displayName || "Bir Üye",
-          senderPhoto: user.photoURL || null,
+          senderPhoto: senderPhoto || null,
           type: 'message',
           title: 'Yeni Mesaj',
           body: txt,
@@ -171,7 +241,7 @@ export default function QuickChat() {
                   <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M15 19l-7-7 7-7" /></svg>
                 </button>
                 <div className="w-10 h-10 rounded-xl overflow-hidden border border-[#d4af37]/40">
-                  {activeChat.otherUser?.image ? <img src={activeChat.otherUser.image} className="w-full h-full object-cover" /> : <div className="w-full h-full bg-[#1a1a1a] flex items-center justify-center text-xl">👤</div>}
+                  {activeChat.otherUser?.image ? <img src={activeChat.otherUser.image} className="w-full h-full object-cover" referrerPolicy="no-referrer" /> : <div className="w-full h-full bg-[#1a1a1a] flex items-center justify-center text-xl">👤</div>}
                 </div>
                 <div>
                   <h3 className="text-xs font-black text-white uppercase truncate w-32">{activeChat.otherUser?.name}</h3>
@@ -207,7 +277,7 @@ export default function QuickChat() {
                       className="flex items-center gap-4 p-4 rounded-2xl bg-white/[0.03] border border-white/5 hover:border-[#d4af37]/30 hover:bg-[#d4af37]/5 transition-all cursor-pointer group"
                     >
                       <div className="relative w-12 h-12 rounded-xl bg-[#1a1a1a] flex-shrink-0 overflow-hidden border border-white/10 group-hover:border-[#d4af37]/40 transition-all">
-                        {chat.otherUser?.image ? <img src={chat.otherUser.image} className="w-full h-full object-cover" /> : <span className="flex items-center justify-center h-full text-xl opacity-20">👤</span>}
+                        {chat.otherUser?.image ? <img src={chat.otherUser.image} className="w-full h-full object-cover" referrerPolicy="no-referrer" /> : <span className="flex items-center justify-center h-full text-xl opacity-20">👤</span>}
                         {(chat.unreadCount?.[user.uid] > 0) && <div className="absolute top-0 right-0 w-2.5 h-2.5 bg-[#d4af37] rounded-full border-2 border-black animate-pulse"></div>}
                       </div>
                       <div className="flex-1 min-w-0">

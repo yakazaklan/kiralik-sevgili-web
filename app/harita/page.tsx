@@ -25,38 +25,92 @@ export default function HaritaPage() {
   useEffect(() => {
     async function loadUsers() {
       try {
+        console.log("Harita verileri yukleniyor...");
+        const usersRef = collection(db, 'users');
+
+        // Genis sorgu (RealProfiles ile uyumlu)
         const q = query(
-          collection(db, 'users'),
-          where('hasProfile', '==', true),
-          where('isApproved', '==', true),
-          limit(20)
+          usersRef,
+          where('isApproved', 'in', [true, "true"]),
+          limit(100)
         );
+
         const snapshot = await getDocs(q);
         const loaded = snapshot.docs.map(doc => {
-          const data = doc.data();
+          const raw = doc.data() || {};
+          const nested = (raw.profile && typeof raw.profile === "object") ? raw.profile : {};
+          // Android Parity: Root fields (raw) have priority over nested 'profile' object
+          const data = { ...nested, ...raw };
+
+          const rStatus = String(raw.status || "").toLowerCase().trim();
+          const nStatus = String(nested.status || "").toLowerCase().trim();
+          const role = String(data.role || nested.role || "").toLowerCase();
+
+          // Onay durumunu Android ile eşzamanlı kontrol et
+          const isApproved = raw.isApproved === true || String(raw.isApproved) === "true" ||
+                            nested.isApproved === true || String(nested.isApproved) === "true";
+
+          // Sadece açıkça false ise pasif say
+          const isExplicitlyPassive = raw.isActive === false || String(raw.isActive) === "false" ||
+                                     data.isActive === false || String(data.isActive) === "false" ||
+                                     ["rejected", "blocked", "banned"].includes(rStatus) ||
+                                     ["rejected", "blocked", "banned"].includes(nStatus);
+
+          const rawVerified = data.isIdVerified ?? data.verified ?? data.isVerified ?? data.idVerified;
+          const isVerified = rawVerified === true ||
+                             String(rawVerified) === "true" ||
+                             String(data.verificationStatus || "").toLowerCase() === "verified" ||
+                             String(data.verificationStatus || "").toLowerCase() === "approved";
+
+          // Fotoğraf öncelik sırası: Android 'photos' dizisi > 'profilePhoto' > Diğerleri
+          let profileImage = "";
+          if (Array.isArray(data.photos) && data.photos.length > 0) {
+            profileImage = data.photos[0];
+          } else if (data.profilePhoto) {
+            profileImage = data.profilePhoto;
+          } else {
+            profileImage = data.profileImageUrl || data.photoUrl || data.photoURL || data.image || data.photo || data.profileImage || data.avatar || (data.photoUrls && data.photoUrls[0]);
+          }
+
           return {
             id: doc.id,
-            name: data.name || 'Kullanıcı',
-            city: data.city || 'İstanbul',
-            district: data.district || '',
-            image: data.profileImageUrl || data.photoUrl || data.image,
-            isVerified: data.isVerified || data.isIdVerified || false,
-            isElite: data.isElite || false,
-            isApproved: data.isApproved || false,
+            name: data.name || data.displayName || 'Gizli Üye',
+            city: data.city || data.sehir || 'Türkiye',
+            district: data.district || data.ilce || '',
+            image: typeof profileImage === 'string' ? profileImage : undefined,
+            isVerified,
+            isElite: (String(data.level).toLowerCase() === 'diamond' || String(data.level).toLowerCase() === 'vip') && isVerified,
+            isApproved: isApproved,
+            isActive: !isExplicitlyPassive && !raw.deletedAt,
             isInvisible: data.isInvisible === true || String(data.isInvisible) === "true",
+            isBusy: data.isBusy === true || String(data.isBusy) === "true" ||
+                    data.isAvailableNow === false || String(data.isAvailableNow) === "false",
+            isListingPendingApproval: raw.isListingPendingApproval === true || nested.isListingPendingApproval === true || data.isListingPendingApproval === true,
+            role
           };
-        }).filter(u => !u.isInvisible);
+        }).filter(u => {
+          // HARİTA GÖRÜNME ŞARTLARI (RealProfiles ile SENKRONİZE)
+          if (u.isInvisible) return false;
+          if (u.isBusy) return false; // MEŞGUL İLANLARI GİZLE
+          if ((u as any).isListingPendingApproval) return false;
+          if (!u.isApproved) return false;
+          if (!u.isVerified) return false; // Kimlik onayı ŞART
+          if (!u.isActive) return false;
+          if (!u.image) return false;
+          if (!u.name || u.name === 'Gizli Üye') return false;
+
+          // Rol Kontrolü
+          if (u.role === 'user') return false;
+          const validRoles = ['companion', 'provider', 'model', 'escort', 'refakatçi', 'refakatci', 'agent', 'agency'];
+          const isCompanion = u.role === 'companion' || validRoles.some(r => u.role?.includes(r));
+          if (!isCompanion && u.role !== "") return false;
+
+          return true;
+        });
         setUsers(loaded);
       } catch (err) {
         console.error("Map Load Error:", err);
-        // Fallback dummy data for interactive preview if firestore is empty or fails
-        setUsers([
-          { id: "1", name: "Melis", city: "İstanbul", district: "Bebek", isVerified: true, isElite: true, isApproved: true },
-          { id: "2", name: "Can", city: "İstanbul", district: "Şişli", isVerified: true, isElite: false, isApproved: true },
-          { id: "3", name: "Derin", city: "İzmir", district: "Alsancak", isVerified: true, isElite: true, isApproved: true },
-          { id: "4", name: "Berk", city: "Ankara", district: "Çankaya", isVerified: false, isElite: false, isApproved: true },
-          { id: "5", name: "Aslı", city: "Antalya", district: "Alanya", isVerified: true, isElite: true, isApproved: true }
-        ]);
+        setUsers([]);
       } finally {
         setLoading(false);
       }
@@ -119,7 +173,7 @@ export default function HaritaPage() {
                 )}
                 <div className="relative w-24 h-24 rounded-full overflow-hidden mb-4 border-2 border-[#1a1a1a] group-hover:border-[#d4af37]/50 transition-colors shadow-inner bg-[#111] flex items-center justify-center">
                   {user.image ? (
-                    <img src={user.image} alt={user.name} className="w-full h-full object-cover" />
+                    <img src={user.image} alt={user.name} className="w-full h-full object-cover" referrerPolicy="no-referrer" />
                   ) : (
                     <span className="text-3xl opacity-30 select-none">👤</span>
                   )}
@@ -157,7 +211,7 @@ export default function HaritaPage() {
 
             <div className="flex flex-col sm:flex-row items-center justify-center gap-4 pt-2">
               <a
-                href="https://play.google.com/store"
+                href="https://play.google.com/store/apps/details?id=com.kiraliksevgili.kiralik_sevgili"
                 target="_blank"
                 rel="noopener noreferrer"
                 className="group/btn relative flex items-center gap-4 rounded-2xl bg-black border border-white/10 p-3 pr-8 transition-all hover:border-[#d4af37]/50 hover:bg-[#050505] hover:scale-105 active:scale-95 w-full sm:w-auto"

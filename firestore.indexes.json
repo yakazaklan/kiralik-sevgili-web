@@ -20,8 +20,7 @@
           "fieldPath": "__name__",
           "order": "DESCENDING"
         }
-      ],
-      "density": "SPARSE_ALL"
+      ]
     },
     {
       "collectionGroup": "notifications",
@@ -39,8 +38,7 @@
           "fieldPath": "__name__",
           "order": "DESCENDING"
         }
-      ],
-      "density": "SPARSE_ALL"
+      ]
     },
     {
       "collectionGroup": "users",
@@ -54,8 +52,25 @@
           "fieldPath": "isApproved",
           "order": "ASCENDING"
         }
-      ],
-      "density": "COLLECTION"
+      ]
+    },
+    {
+      "collectionGroup": "users",
+      "queryScope": "COLLECTION",
+      "fields": [
+        {
+          "fieldPath": "role",
+          "order": "ASCENDING"
+        },
+        {
+          "fieldPath": "isListingPendingApproval",
+          "order": "ASCENDING"
+        },
+        {
+          "fieldPath": "isProfileUpdate",
+          "order": "ASCENDING"
+        }
+      ]
     },
     {
       "collectionGroup": "users",
@@ -69,8 +84,7 @@
           "fieldPath": "status",
           "order": "ASCENDING"
         }
-      ],
-      "density": "COLLECTION"
+      ]
     }
   ],
   "fieldOverrides": []

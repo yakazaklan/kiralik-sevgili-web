@@ -51,7 +51,7 @@ export const metadata: Metadata = {
     description: "Türkiye genelinde sosyal etkinlikler ve günlük aktiviteler için sosyal refakat platformu.",
   },
   alternates: {
-    canonical: absoluteUrl("/"),
+    canonical: "./",
   },
   icons: {
     icon: "/favicon.ico",

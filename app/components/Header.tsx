@@ -11,6 +11,7 @@ import { db } from "@/lib/firebase";
 export default function Header() {
   const pathname = usePathname();
   const [user, setUser] = useState<User | null>(null);
+  const [profileImage, setProfileImage] = useState<string | null>(null);
   const [hasUnread, setHasUnread] = useState(false);
 
   useEffect(() => {
@@ -20,11 +21,28 @@ export default function Header() {
       if (currentUser) {
         // Kullanıcı silinmiş mi kontrol et
         try {
-          const userRef = doc(db, "users", currentUser.uid);
+          const rawUid = currentUser.uid;
+          const userRef = doc(db, "users", rawUid);
           const userSnap = await getDoc(userRef);
 
           if (userSnap.exists()) {
             const userData = userSnap.data();
+            const nested = userData.profile || {};
+            // Android Parity: Root fields (userData) have priority over nested 'profile' object
+            const data = { ...nested, ...userData };
+
+            // Profil fotoğrafı öncelik sırası: Android 'photos' dizisi > 'profilePhoto' > Diğerleri
+            let finalPhoto = "";
+            if (Array.isArray(data.photos) && data.photos.length > 0) {
+              finalPhoto = data.photos[0];
+            } else if (data.profilePhoto) {
+              finalPhoto = data.profilePhoto;
+            } else {
+              finalPhoto = data.profileImageUrl || data.photoUrl || data.photoURL || data.image || data.photo || data.profileImage || data.avatar || (data.photoUrls && data.photoUrls[0]) || "";
+            }
+
+            setProfileImage(finalPhoto || currentUser.photoURL || null);
+
             const isDeleted = !!userData.deletedAt;
             const isPassive = userData.isActive === false;
 
@@ -59,6 +77,7 @@ export default function Header() {
 
   useEffect(() => {
     if (!user) {
+      setProfileImage(null);
       setHasUnread(false);
       return;
     }
@@ -88,7 +107,8 @@ export default function Header() {
 
       // Kullanıcı bilgilerini Firestore'a kaydet/güncelle
       if (user) {
-        const userRef = doc(db, "users", user.uid);
+        const rawUid = user.uid;
+        const userRef = doc(db, "users", rawUid);
         const userSnap = await getDoc(userRef);
 
         if (userSnap.exists()) {
@@ -100,10 +120,34 @@ export default function Header() {
             email: user.email || userSnap.data().email
           }, { merge: true });
         } else {
-          // EĞER KULLANICI YOKSA: Teşhis için UID logla
-          console.error(`[Auth Diagnostic] UID Mismatch! Google UID: ${user.uid} does not exist in Firestore /users collection.`);
-          console.log("Firestore profile not found. Skipping auto-creation to prevent data loss.");
-          alert(`Hesap Eşleşme Hatası: Giriş yaptığınız Google hesabı (${user.email}) Android profilinizle eşleşmedi. Lütfen desteğe başvurun. (UID: ${user.uid.substring(0, 5)}...)`);
+          // EĞER KULLANICI YOKSA: Yeni kullanıcı oluştur ve 1000 Alya tanımla
+          console.log(`[Auth] New user detected on Web. Initializing profile for UID: ${rawUid}`);
+          await setDoc(userRef, {
+            uid: rawUid,
+            email: user.email,
+            displayName: user.displayName,
+            name: user.displayName,
+            profilePhoto: user.photoURL,
+            role: 'seeker',
+            isApproved: true,
+            alyaBalance: 1000,
+            welcomeGiftGranted: true,
+            isOnboarded: false,
+            hasProfile: false,
+            createdAt: serverTimestamp(),
+            lastLogin: serverTimestamp(),
+            lastSeen: serverTimestamp(),
+          });
+
+          // Alya işlem geçmişine de ekle
+          const historyRef = doc(collection(db, 'alya_transactions'));
+          await setDoc(historyRef, {
+            userId: rawUid,
+            amount: 1000,
+            description: 'Hoş geldin hediyesi 1000 Alya (Web Kayıt)',
+            type: 'welcome_bonus',
+            timestamp: serverTimestamp(),
+          });
         }
       }
     } catch (error: any) {
@@ -169,7 +213,13 @@ export default function Header() {
 
             {user ? (
               <div className="flex items-center gap-2">
-                <img src={user.photoURL || ""} alt="Profil" className="w-8 h-8 rounded-full border border-[#d4af37]" />
+                <div className="w-8 h-8 rounded-full border border-[#d4af37] overflow-hidden bg-[#1a1a1a] flex items-center justify-center">
+                  {profileImage ? (
+                    <img src={profileImage} alt="Profil" className="w-full h-full object-cover" referrerPolicy="no-referrer" />
+                  ) : (
+                    <span className="text-xs">👤</span>
+                  )}
+                </div>
                 <button
                   onClick={handleLogout}
                   className="rounded-full bg-[#1a1a1a] px-3 py-2 text-[9px] font-black uppercase text-white transition hover:bg-red-500"

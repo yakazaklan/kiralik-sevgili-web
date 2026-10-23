@@ -51,8 +51,8 @@ export default function CitySelector({ currentCity, currentDistrict }: { current
   );
 
   return (
-    <div className="space-y-6">
-      <div className="flex flex-col sm:flex-row items-center justify-between gap-6 bg-[#0a0a0a] p-6 md:p-8 rounded-[2.5rem] border border-white/5 shadow-2xl">
+    <div className="space-y-4">
+      <div className="flex flex-col sm:flex-row items-center justify-between gap-4 bg-[#0a0a0a] p-3 md:p-4 rounded-[2.5rem] border border-white/5 shadow-2xl">
         <div className="flex items-center gap-4">
           <div className="w-12 h-12 rounded-2xl bg-[#d4af37]/10 border border-[#d4af37]/20 flex items-center justify-center text-xl text-[#d4af37]">
             📍

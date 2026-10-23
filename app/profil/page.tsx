@@ -3,13 +3,14 @@
 import React, { useEffect, useState } from 'react';
 import { auth, db } from '@/lib/firebase';
 import { onAuthStateChanged, signOut } from 'firebase/auth';
-import { doc, getDoc } from 'firebase/firestore';
+import { doc, getDoc, updateDoc } from 'firebase/firestore';
 import Link from 'next/link';
 
 export default function ProfilPage() {
   const [user, setUser] = useState<any>(null);
   const [profile, setProfile] = useState<any>(null);
   const [loading, setLoading] = useState(true);
+  const [updatingStatus, setUpdatingStatus] = useState(false);
 
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, async (currentUser) => {
@@ -20,11 +21,19 @@ export default function ProfilPage() {
           const docSnap = await getDoc(docRef);
           if (docSnap.exists()) {
             const data = docSnap.data();
+            const nested = data.profile || {};
+            const combined = { ...data, ...nested };
+
+            // Normalize busy status for cross-platform compatibility
+            const isBusy = combined.isBusy === true || combined.isBusy === "true" ||
+                           combined.isAvailableNow === false || combined.isAvailableNow === "false";
+
             setProfile({
-              ...data,
-              name: data.name || data.displayName || currentUser.displayName || "Seçkin Üye",
-              alyaBalance: data.alyaBalance ?? 0,
-              meetingCount: data.completedMeetingsCount ?? data.meetingCount ?? 0
+              ...combined,
+              isBusy,
+              name: combined.name || combined.displayName || currentUser.displayName || "Seçkin Üye",
+              alyaBalance: combined.alyaBalance ?? 1000,
+              meetingCount: combined.completedMeetingsCount ?? combined.meetingCount ?? 0
             });
           } else {
             setProfile({
@@ -32,8 +41,9 @@ export default function ProfilPage() {
               city: "İstanbul",
               role: "user",
               isIdVerified: false,
-              alyaBalance: 0,
-              meetingCount: 0
+              alyaBalance: 1000,
+              meetingCount: 0,
+              photoURL: currentUser.photoURL
             });
           }
         } catch (e) {
@@ -43,8 +53,9 @@ export default function ProfilPage() {
             city: "İstanbul",
             role: "user",
             isIdVerified: false,
-            alyaBalance: 0,
-            meetingCount: 0
+            alyaBalance: 1000,
+            meetingCount: 0,
+            photoURL: currentUser.photoURL
           });
         }
       } else {
@@ -64,6 +75,28 @@ export default function ProfilPage() {
     }
     setUser(null);
     setProfile(null);
+  };
+
+  const toggleBusyStatus = async () => {
+    if (!user || !profile) return;
+    setUpdatingStatus(true);
+    try {
+      const newStatus = !profile.isBusy;
+      const isAvailableNow = !newStatus;
+      const docRef = doc(db, 'users', user.uid);
+      await updateDoc(docRef, {
+        isBusy: newStatus,
+        "profile.isBusy": newStatus,
+        isAvailableNow: isAvailableNow,
+        "profile.isAvailableNow": isAvailableNow
+      });
+      setProfile({ ...profile, isBusy: newStatus, isAvailableNow: isAvailableNow });
+    } catch (error) {
+      console.error("Status update error:", error);
+      alert("Durum güncellenirken bir hata oluştu.");
+    } finally {
+      setUpdatingStatus(false);
+    }
   };
 
   if (loading) {
@@ -86,11 +119,27 @@ export default function ProfilPage() {
 
           <div className="flex flex-col md:flex-row items-center gap-8 relative z-10">
             <div className="w-32 h-32 rounded-[2.5rem] bg-[#111] border-2 border-[#1a1a1a] overflow-hidden flex items-center justify-center text-4xl shadow-2xl relative group">
-              {profile?.profileImageUrl || profile?.photoUrl ? (
-                <img src={profile.profileImageUrl || profile.photoUrl} alt="Profil" className="w-full h-full object-cover" />
-              ) : (
-                <span className="text-4xl opacity-40 select-none">👤</span>
-              )}
+              {(() => {
+                const raw = profile || {};
+                const nested = profile?.profile || {};
+                // Android Parity: Root fields have priority
+                const data = { ...nested, ...raw };
+
+                let photo = "";
+                if (Array.isArray(data.photos) && data.photos.length > 0) {
+                  photo = data.photos[0];
+                } else if (data.profilePhoto) {
+                  photo = data.profilePhoto;
+                } else {
+                  photo = data.profileImageUrl || data.photoUrl || data.profilePhoto || data.photoURL || data.image || data.photo || data.profileImage || data.avatar || (data.photoUrls && data.photoUrls[0]) || user?.photoURL || "";
+                }
+
+                return photo ? (
+                  <img src={photo} alt="Profil" className="w-full h-full object-cover" referrerPolicy="no-referrer" />
+                ) : (
+                  <span className="text-4xl opacity-40 select-none">👤</span>
+                );
+              })()}
             </div>
 
             <div className="flex-1 text-center md:text-left space-y-2">
@@ -104,6 +153,31 @@ export default function ProfilPage() {
                     KİMLİK ONAYLI
                   </span>
                 )}
+                {profile?.isApproved ? (
+                  <span className="px-3 py-1 bg-emerald-500/10 border border-emerald-500/30 text-emerald-500 text-[8px] font-black uppercase tracking-widest rounded-full flex items-center gap-1">
+                    İLAN ONAYLI
+                  </span>
+                ) : (profile?.isListingPendingApproval || profile?.isPendingApproval) ? (
+                  <span className="px-3 py-1 bg-amber-500/10 border border-amber-500/30 text-amber-500 text-[8px] font-black uppercase tracking-widest rounded-full flex items-center gap-1">
+                    İLAN ONAY BEKLİYOR
+                  </span>
+                ) : (
+                  <span className="px-3 py-1 bg-red-500/10 border border-red-500/30 text-red-500 text-[8px] font-black uppercase tracking-widest rounded-full flex items-center gap-1">
+                    İLAN YAYINDA DEĞİL
+                  </span>
+                )}
+                <button
+                  onClick={toggleBusyStatus}
+                  disabled={updatingStatus}
+                  className={`px-3 py-1 border text-[8px] font-black uppercase tracking-widest rounded-full flex items-center gap-1.5 transition-all ${
+                    profile?.isBusy
+                    ? 'bg-red-500/10 border-red-500/30 text-red-500'
+                    : 'bg-green-500/10 border-green-500/30 text-green-500'
+                  }`}
+                >
+                  <span className={`w-1.5 h-1.5 rounded-full animate-pulse ${profile?.isBusy ? 'bg-red-500' : 'bg-green-500'}`}></span>
+                  {profile?.isBusy ? 'MEŞGUL' : 'MÜSAİT'}
+                </button>
               </div>
               <p className="text-gray-500 font-bold text-xs uppercase tracking-widest">
                 📍 {profile?.city || 'İstanbul'} • {profile?.role === 'companion' ? '👑 ELİT REFAKATÇİ' : 'STANDART ÜYE'}
@@ -137,18 +211,16 @@ export default function ProfilPage() {
             <p className="text-xs text-gray-500 font-medium leading-relaxed">Gelen gerçek zamanlı mesajları ve arkadaşlık isteklerini kontrol edin.</p>
           </Link>
 
-          <div className="p-8 rounded-[2.5rem] bg-[#0a0a0a] border border-[#1a1a1a] relative group shadow-xl">
-            <span className="absolute top-4 right-4 px-2 py-0.5 bg-amber-500/10 border border-amber-500/20 text-amber-500 text-[8px] font-black uppercase tracking-widest rounded-full">Mobil</span>
-            <div className="w-12 h-12 bg-gray-500/10 text-gray-400 rounded-2xl flex items-center justify-center text-xl mb-6">⚙️</div>
-            <h3 className="text-base font-black text-white uppercase tracking-tight mb-2">PROFİL AYARLARI</h3>
-            <p className="text-xs text-gray-500 font-medium leading-relaxed mb-4">Profil detaylarını, WhatsApp iletişim kanallarını ve fotoğrafları güncelleyin.</p>
-            <a href="https://play.google.com/store" target="_blank" className="text-[10px] font-black text-[#d4af37] uppercase tracking-wider hover:underline">UYGULAMAYI AÇ ➔</a>
-          </div>
+          <Link href="/profil/duzenle" className="p-8 rounded-[2.5rem] bg-[#0a0a0a] border border-[#1a1a1a] hover:border-[#d4af37]/40 transition-all group shadow-xl">
+            <div className="w-12 h-12 bg-[#d4af37]/10 text-[#d4af37] rounded-2xl flex items-center justify-center text-xl mb-6 group-hover:scale-110 transition-transform">⚙️</div>
+            <h3 className="text-base font-black text-white uppercase tracking-tight mb-2 group-hover:text-[#d4af37] transition-colors">PROFİL AYARLARI</h3>
+            <p className="text-xs text-gray-500 font-medium leading-relaxed">Profil detaylarını, müsaitlik durumunu ve bildirim ayarlarını güncelleyin.</p>
+          </Link>
 
-          <Link href="/hesap-silme" className="p-8 rounded-[2.5rem] bg-[#0a0a0a] border border-[#1a1a1a] hover:border-red-500/40 transition-all group shadow-xl">
+          <Link href="/hesap-silme" className="p-8 rounded-[2.5rem] bg-[#0a0a0a] border border-red-500/10 hover:border-red-500/40 transition-all group shadow-xl bg-red-500/[0.02]">
             <div className="w-12 h-12 bg-red-500/10 text-red-500 rounded-2xl flex items-center justify-center text-xl mb-6 group-hover:scale-110 transition-transform">🗑️</div>
             <h3 className="text-base font-black text-white uppercase tracking-tight mb-2 group-hover:text-red-500 transition-colors">HESABI SİL</h3>
-            <p className="text-xs text-gray-500 font-medium leading-relaxed">Hesabınızı ve verilerinizi kalıcı olarak silme işlemini başlatın.</p>
+            <p className="text-xs text-red-500/60 font-medium leading-relaxed">Hesabınızı ve tüm verilerinizi kalıcı olarak silmek için buraya tıklayın.</p>
           </Link>
 
           <button onClick={handleLogout} className="p-8 rounded-[2.5rem] bg-[#0a0a0a] border border-[#1a1a1a] hover:border-red-500/40 transition-all group text-left shadow-xl sm:col-span-2">

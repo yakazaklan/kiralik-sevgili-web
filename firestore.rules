@@ -3,58 +3,222 @@ rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
 
+    // -- YARDIMCI FONKSİYONLAR --
+
+    function isSignedIn() {
+      return request.auth != null;
+    }
+
+    // UID normalization to match Application logic (lowercase storage)
+    function authUid() {
+      return request.auth.uid.lower();
+    }
+
     function isAdmin() {
-      return request.auth != null
-        && get(/databases/$(database)/documents/users/$(request.auth.uid)).data.isAdmin == true;
+      return isSignedIn() && (
+        (exists(/databases/$(database)/documents/users/$(authUid())) &&
+         get(/databases/$(database)/documents/users/$(authUid())).data.get('isAdmin', false) == true) ||
+        request.auth.token.get('email', '').lower() in ['35serinkaratas@gmail.com', '35tolgayenice@gmail.com']
+      );
     }
 
+    function isOwner(userId) {
+      return isSignedIn() && (authUid() == userId.lower() || request.auth.uid == userId);
+    }
+
+    // -- KOLEKSİYON KURALLARI --
+
+    // KULLANICILAR
     match /users/{userId} {
-      // GÜVENLİ OKUMA: Sadece onaylanmış ve aktif profillerin herkese açık olmasına izin veriyoruz.
-      // Bu hem Web hem Android tarafındaki "ilanların kaybolması" sorununu çözerken gizliliği korur.
-      allow read: if resource.data.isApproved == true || resource.data.isApproved == "true"
-                  || resource.data.status == "approved" || resource.data.status == "active";
+      allow read: if true;
 
-      // Sahip ve Admin tam yetkiye sahip.
-      allow write, read: if request.auth != null
-        && (request.auth.uid == userId || isAdmin());
+      // Kayıt anındaki kısıtlamalar.
+      allow create: if isOwner(userId) &&
+        (!('isAdmin' in request.resource.data) || request.resource.data.isAdmin == false) &&
+        (!('isElite' in request.resource.data) || request.resource.data.isElite == false) &&
+        (!('isIdVerified' in request.resource.data) || request.resource.data.isIdVerified == false) &&
+        (request.resource.data.get('alyaBalance', 0) <= 10000);
+
+      // Güncelleme kısıtlamaları
+      allow update: if isAdmin() || (
+        isOwner(userId) &&
+        // Kritik alanların kullanıcı tarafından doğrudan değiştirilmesini engelle
+        !request.resource.data.diff(resource.data).affectedKeys().hasAny([
+          'isAdmin', 'isVerified', 'isElite', 'isPhoneVerified',
+          'level', 'status', 'deletedAt', 'reportCount', 'blockCount',
+          'bannedUntil', 'banReason'
+        ]) &&
+
+        // Bakiye kontrolü: Kullanıcı bakiyesini kendisi artıramaz
+        (!request.resource.data.diff(resource.data).affectedKeys().hasAny(['alyaBalance']) ||
+         request.resource.data.get('alyaBalance', 0) <= resource.data.get('alyaBalance', 0)) &&
+
+        // Onay ve Rol Kontrolü:
+        (!request.resource.data.diff(resource.data).affectedKeys().hasAny(['isApproved']) ||
+         request.resource.data.get('isApproved', false) == false ||
+         resource.data.get('isApproved', false) == true ||
+         request.resource.data.get('role', 'seeker') == 'seeker') &&
+
+        // Bekleyen Onay Kontrolleri: Kullanıcı sadece true yapabilir (onay talebi) veya iptal edebilir (none).
+        (!request.resource.data.diff(resource.data).affectedKeys().hasAny(['isPendingApproval']) ||
+         request.resource.data.get('isPendingApproval', false) == true ||
+         request.resource.data.get('verificationStatus', 'none') == 'none') &&
+
+        (!request.resource.data.diff(resource.data).affectedKeys().hasAny(['isIdentityPendingApproval']) ||
+         request.resource.data.get('isIdentityPendingApproval', false) == true ||
+         request.resource.data.get('verificationStatus', 'none') == 'none') &&
+
+        // RejectionReason: Kullanıcı sadece null yapabilir (temizleyebilir)
+        (!request.resource.data.diff(resource.data).affectedKeys().hasAny(['rejectionReason']) ||
+         request.resource.data.get('rejectionReason', null) == null) &&
+
+        // Kimlik doğrulama statüsü: Kullanıcı sadece 'pending' yapabilir veya iptal edebilir ('none')
+        (!request.resource.data.diff(resource.data).affectedKeys().hasAny(['verificationStatus']) ||
+         request.resource.data.get('verificationStatus', 'none') in ['pending', 'none'] ||
+         request.resource.data.get('verificationStatus', 'none') == resource.data.get('verificationStatus', 'none')) &&
+
+        // isIdVerified: Kullanıcı sadece false yapabilir (iptal/red durumunda)
+        (!request.resource.data.diff(resource.data).affectedKeys().hasAny(['isIdVerified']) ||
+         request.resource.data.get('isIdVerified', false) == false)
+      );
+
+      allow delete: if isAdmin();
     }
 
-    match /verifications/{docId} {
-      allow read: if request.auth != null && (resource.data.userId == request.auth.uid || isAdmin());
-      allow create: if request.auth != null;
-      allow update, delete: if request.auth != null && (resource.data.userId == request.auth.uid || isAdmin());
+    // KİMLİK DOĞRULAMA TALEPLERİ
+    match /verifications/{uid} {
+      allow read: if isAdmin() || isOwner(uid);
+      allow create: if isOwner(uid);
+      allow update: if isAdmin();
+      allow delete: if isAdmin() || isOwner(uid);
     }
 
-    match /reports/{docId} {
-      allow create: if request.auth != null;
+    // TOPLULUK GÖNDERİLERİ
+    match /community_posts/{postId} {
+      allow read: if true;
+      allow create: if isSignedIn() && request.resource.data.userId.lower() == authUid();
+      allow update: if isSignedIn() && (
+        resource.data.userId.lower() == authUid() ||
+        isAdmin() ||
+        request.resource.data.diff(resource.data).affectedKeys().hasOnly(['likes', 'commentCount', 'trustScore', 'boostedUntil'])
+      );
+      allow delete: if isSignedIn() && (resource.data.userId.lower() == authUid() || isAdmin());
+
+      match /comments/{commentId} {
+        allow read: if true;
+        allow create: if isSignedIn();
+        allow update, delete: if isSignedIn() && (resource.data.userId.lower() == authUid() || isAdmin());
+      }
+    }
+
+    // BİLDİRİMLER
+    match /notifications/{notifId} {
+      allow read: if isSignedIn() && (
+        resource.data.recipientId.lower() == authUid() ||
+        (resource.data.recipientId == 'admin' && isAdmin())
+      );
+      allow create: if isSignedIn() && (
+        request.resource.data.senderId.lower() == authUid() ||
+        isAdmin()
+      );
+      allow update: if isSignedIn() && (
+        resource.data.recipientId.lower() == authUid() ||
+        isAdmin()
+      );
+      allow delete: if isAdmin();
+    }
+
+    // PUSH BİLDİRİMLERİ (Trigger)
+    match /push_notifications/{notifId} {
+      allow create: if isSignedIn() && (
+        request.resource.data.senderId.lower() == authUid() ||
+        isAdmin()
+      );
       allow read, update, delete: if isAdmin();
     }
 
-    match /account_deletion_requests/{docId} {
-      allow create, read, update, delete: if isAdmin();
+    // DENETİM GÜNLÜKLERİ (AUDIT LOGS)
+    match /audit_logs/{logId} {
+      allow read: if isAdmin();
+      allow create: if isSignedIn() && request.resource.data.userId.lower() == authUid();
     }
 
+    // ŞİKAYETLER
+    match /reports/{reportId} {
+      allow read: if isAdmin();
+      allow create: if isSignedIn() && request.resource.data.reporterId.lower() == authUid();
+      allow update, delete: if isAdmin();
+    }
+
+    // SOHBETLER
     match /chats/{chatId} {
-      allow read, write: if request.auth != null && request.auth.uid in resource.data.participants;
-      allow create: if request.auth != null;
+      allow read: if isSignedIn() && (authUid() in resource.data.participants || isAdmin());
+      allow create: if isSignedIn() && authUid() in request.resource.data.participants;
+      allow update: if isSignedIn() && (isAdmin() || authUid() in resource.data.participants);
+      allow delete: if isAdmin();
+
+      match /messages/{messageId} {
+        allow read: if isSignedIn() && (authUid() in get(/databases/$(database)/documents/chats/$(chatId)).data.participants || isAdmin());
+        allow create: if isSignedIn() && authUid() in get(/databases/$(database)/documents/chats/$(chatId)).data.participants;
+        allow update: if isSignedIn() && authUid() in get(/databases/$(database)/documents/chats/$(chatId)).data.participants;
+        allow delete: if isAdmin();
+      }
     }
 
+    // MESAJ İSTEKLERİ
     match /message_requests/{requestId} {
-      allow read: if request.auth != null && (request.auth.uid == resource.data.senderId || request.auth.uid == resource.data.receiverId);
-      allow create: if request.auth != null;
-      allow update: if request.auth != null && request.auth.uid == resource.data.receiverId;
+      allow read: if isSignedIn() && (
+        resource.data.senderId.lower() == authUid() ||
+        resource.data.receiverId.lower() == authUid() ||
+        isAdmin()
+      );
+      allow create: if isSignedIn() && request.resource.data.senderId.lower() == authUid();
+      allow update: if isSignedIn() && (
+        resource.data.receiverId.lower() == authUid() ||
+        isAdmin()
+      );
+      allow delete: if isAdmin() || (isSignedIn() && resource.data.senderId.lower() == authUid());
     }
 
-    match /notifications/{notifId} {
-      allow read: if request.auth != null && request.auth.uid == resource.data.recipientId;
-      allow create: if request.auth != null;
+    // ARAMALAR
+    match /calls/{callId} {
+      allow read: if isSignedIn() && (
+        resource.data.callerId.lower() == authUid() ||
+        resource.data.receiverId.lower() == authUid() ||
+        isAdmin()
+      );
+      allow create: if isSignedIn() && request.resource.data.callerId.lower() == authUid();
+      allow update: if isSignedIn() && (
+        resource.data.callerId.lower() == authUid() ||
+        resource.data.receiverId.lower() == authUid() ||
+        isAdmin()
+      );
+      allow delete: if isAdmin();
     }
 
-    match /push_notifications/{notifId} {
-      allow create: if request.auth != null;
+    // ALYA İŞLEMLERİ (LOG)
+    match /alya_transactions/{txId} {
+      allow read: if isAdmin() || (isSignedIn() && resource.data.userId.lower() == authUid());
+      allow create: if isAdmin() || (
+        isSignedIn() &&
+        request.resource.data.userId.lower() == authUid() &&
+        request.resource.data.amount <= 0
+      );
     }
 
-    match /{path=**} {
+    // GÜNLÜK SORULAR
+    match /daily_questions/{questionId} {
+      allow read: if true;
+      allow update: if isSignedIn() && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['votes', 'totalVotes']);
+
+      match /user_votes/{userId} {
+        allow read: if true;
+        allow create: if isOwner(userId);
+      }
+    }
+
+    // VARSAYILAN: Admin değilse her şeyi reddet
+    match /{document=**} {
       allow read, write: if isAdmin();
     }
   }

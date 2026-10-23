@@ -92,7 +92,7 @@ function PostCard({ post }: { post: Post }) {
             {post.isAnonymous ? (
               <div className="flex items-center justify-center h-full text-lg opacity-40">🎭</div>
             ) : post.userPhoto ? (
-              <img src={post.userPhoto} alt={post.userName} className="w-full h-full object-cover" />
+              <img src={post.userPhoto} alt={post.userName} className="w-full h-full object-cover" referrerPolicy="no-referrer" />
             ) : (
               <div className="flex items-center justify-center h-full text-lg opacity-20">👤</div>
             )}
@@ -248,17 +248,32 @@ export default function DedikoduPage() {
 
     setIsPosting(true);
     try {
+      // Profil fotoğrafı öncelik sırası: Firestore alanları > Auth photoURL
+      const raw = userProfile || {};
+      const nested = userProfile.profile || {};
+      // Android Parity: Root fields (raw) have priority over nested 'profile' object
+      const data = { ...nested, ...raw };
+
+      let photo = "";
+      if (Array.isArray(data.photos) && data.photos.length > 0) {
+        photo = data.photos[0];
+      } else if (data.profilePhoto) {
+        photo = data.profilePhoto;
+      } else {
+        photo = data.profileImageUrl || data.photoUrl || data.photoURL || data.image || data.photo || data.profileImage || data.avatar || (data.photoUrls && data.photoUrls[0]) || auth.currentUser?.photoURL || "";
+      }
+
       await addDoc(collection(db, 'community_posts'), {
         userId: auth.currentUser?.uid,
-        userName: userProfile.name || userProfile.displayName || "Anonim",
-        userPhoto: userProfile.profileImageUrl || userProfile.photoUrl || "",
+        userName: data.name || data.displayName || "Anonim",
+        userPhoto: photo || "",
         text: newPost,
-        city: userProfile.city || "Türkiye",
-        district: userProfile.district || "",
+        city: data.city || "Türkiye",
+        district: data.district || "",
         createdAt: serverTimestamp(),
         likes: [],
         commentCount: 0,
-        isElite: userProfile.isElite || false,
+        isElite: data.isElite || false,
         isAnonymous: isAnonymous,
         isSecret: false,
         trustScore: 0

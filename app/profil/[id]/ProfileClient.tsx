@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState, useRef } from "react";
-import { doc, getDoc, setDoc, updateDoc, serverTimestamp, collection, query, where, getDocs, addDoc } from "firebase/firestore";
+import { doc, getDoc, setDoc, updateDoc, serverTimestamp, collection, query, where, getDocs, addDoc, onSnapshot } from "firebase/firestore";
 import { ref as storageRef, uploadBytes, getDownloadURL } from "firebase/storage";
 import { useParams, useRouter } from "next/navigation";
 import { db, auth, storage } from "../../../lib/firebase";
@@ -25,6 +25,7 @@ type Profile = {
   hasProfile: boolean;
   isElite: boolean;
   isOrange?: boolean;
+  level: 'diamond' | 'vip' | 'gold';
   meetingCount: number;
   whatsappNumber?: string;
   whatsappContactEnabled?: boolean;
@@ -66,7 +67,7 @@ export default function ProfileClient() {
   const [loading, setLoading] = useState(true);
   const [currentUser, setCurrentUser] = useState<User | null>(null);
   const [isOwner, setIsOwner] = useState(false);
-  const [requestStatus, setRequestStatus] = useState<"none" | "pending" | "accepted">("none");
+  const [requestStatus, setRequestStatus] = useState<string>("none");
   const [sendingRequest, setSendingRequest] = useState(false);
   const [showReportMenu, setShowReportMenu] = useState(false);
   const [isReporting, setIsReporting] = useState(false);
@@ -111,26 +112,34 @@ export default function ProfileClient() {
   };
 
   useEffect(() => {
-    async function checkExistingRequest() {
-      if (!currentUser || !id || currentUser.uid === id) return;
+    if (!currentUser || !id || id === "ilan-detay" || currentUser.uid === id) return;
 
-      const sId = currentUser.uid;
-      const rId = id;
-      const chatId = [sId, rId].sort().join("_");
+    const sId = currentUser.uid;
+    const rId = id;
+    const chatId = [sId, rId].sort().join("_");
 
-      const docRef = doc(db, "message_requests", chatId);
-      const snap = await getDoc(docRef);
-      if (snap.exists()) {
-        setRequestStatus(snap.data().status as any);
+    // Real-time listener for connection status
+    const unsub = onSnapshot(doc(db, "chats", chatId), (docSnap) => {
+      if (docSnap.exists()) {
+        const data = docSnap.data();
+        const status = data.requestStatus || "none";
+
+        // If it was deleted by the other person or globally, we might want to allow re-connecting
+        // But for the UI state, we show what's in the doc
+        setRequestStatus(status as any);
       } else {
-        const chatRef = doc(db, "chats", chatId);
-        const chatSnap = await getDoc(chatRef);
-        if (chatSnap.exists()) {
-          setRequestStatus(chatSnap.data().requestStatus === "accepted" ? "accepted" : "pending");
-        }
+        // Fallback to message_requests if chat doc doesn't exist (legacy or mid-process)
+        getDoc(doc(db, "message_requests", chatId)).then(snap => {
+          if (snap.exists()) {
+            setRequestStatus(snap.data().status as any);
+          } else {
+            setRequestStatus("none");
+          }
+        });
       }
-    }
-    checkExistingRequest();
+    });
+
+    return () => unsub();
   }, [currentUser, id]);
 
   useEffect(() => {
@@ -152,12 +161,19 @@ export default function ProfileClient() {
 
         const raw = snapshot.data();
         const nested = raw.profile && typeof raw.profile === "object" ? raw.profile : {};
-        const data = { ...raw, ...nested };
+        // Android Parity: Root fields (raw) have priority over nested 'profile' object
+        const data = { ...nested, ...raw };
 
         const rStatus = String(raw.status || "").toLowerCase().trim();
         const nStatus = String(nested.status || "").toLowerCase().trim();
 
-        // Onay durumunu RealProfiles.tsx ile eşzamanlı kontrol et
+        const rawVerified = data.isIdVerified ?? data.verified ?? data.isVerified ?? data.idVerified;
+        const isVerified = rawVerified === true ||
+                           String(rawVerified) === "true" ||
+                           String(data.verificationStatus || "").toLowerCase() === "verified" ||
+                           String(data.verificationStatus || "").toLowerCase() === "approved";
+
+        // Android Parity: Listing approval and Identity verification are separate.
         const isApproved = raw.isApproved === true || String(raw.isApproved) === "true" ||
                           nested.isApproved === true || String(nested.isApproved) === "true" ||
                           rStatus === "approved" || nStatus === "approved";
@@ -169,45 +185,45 @@ export default function ProfileClient() {
                                    ["rejected", "blocked", "banned"].includes(nStatus);
 
         const isInvisible = data.isInvisible === true || String(data.isInvisible) === "true";
+        const isBusy = data.isBusy === true || String(data.isBusy) === "true" ||
+                       data.isAvailableNow === false || String(data.isAvailableNow) === "false";
         const role = String(data.role || nested.role || "").toLowerCase();
 
-        // hasProfile alanı eksikse, profil verisi veya ismi varsa var kabul et
-        const hasProfile = raw.hasProfile === true || String(raw.hasProfile) === "true" ||
-                          data.hasProfile === true || String(data.hasProfile) === "true" ||
-                          (data.name && data.bio);
+        let photos: string[] = [];
 
-        // Rol Filtresi: RealProfiles.tsx ile senkronize edildi
-        const validRoles = ['companion', 'provider', 'model', 'escort', 'refakatçi', 'refakatci', 'refakat', 'agent', 'agency'];
-        const isCompanion = !role || role === "" || role === "user" || validRoles.some(r => role.includes(r));
-
-        // GÖRÜNME ŞARTI: RealProfiles.tsx ile senkronize edildi.
-        if (isInvisible || raw.deletedAt || isExplicitlyPassive || !isApproved || !hasProfile || !isCompanion) {
-          console.error("Profile not visible (restricted):", { id, deletedAt: raw.deletedAt, isInvisible, isExplicitlyPassive, isApproved, hasProfile, isCompanion });
-          setProfile(null);
-          setLoading(false);
-          return;
+        // 1. Birincil kaynak: Android uygulamasının yazdığı 'photos' dizisi
+        if (Array.isArray(data.photos)) {
+          for (const item of data.photos) {
+            if (typeof item === 'string' && item.trim().startsWith('http')) {
+              const url = item.trim();
+              if (!photos.includes(url)) photos.push(url);
+            }
+          }
         }
 
-        const isActive = isApproved && !isExplicitlyPassive;
+        // 2. İkinci birincil kaynak: 'profilePhoto' alanı
+        if (data.profilePhoto && typeof data.profilePhoto === 'string' && data.profilePhoto.trim().startsWith('http')) {
+          const url = data.profilePhoto.trim();
+          if (!photos.includes(url)) {
+            photos.unshift(url);
+          } else {
+            const idx = photos.indexOf(url);
+            if (idx > 0) {
+              photos.splice(idx, 1);
+              photos.unshift(url);
+            }
+          }
+        }
 
-        const rawVerified = data.isIdVerified ?? data.verified ?? data.isVerified ?? data.idVerified;
-        const isVerified = rawVerified === true || String(rawVerified) === "true" || String(data.verificationStatus).toLowerCase() === "verified";
-        const meetingCount = Number(data.completedMeetingsCount ?? data.meetingCount ?? 0);
-
-        // Tier Mantığı - RealProfiles ile tutarlı
-        const isElite = isApproved && isVerified && meetingCount >= 5;
-        const isOrange = isApproved && !isVerified;
-
-        let photos: string[] = [];
         const candidates = [
           data.profileImageUrl,
           data.photoUrl,
-          data.profilePhoto,
           data.photoURL,
           data.image,
           data.photo,
           data.profileImage,
-          data.avatar
+          data.avatar,
+          data.profile_image
         ];
 
         for (const val of candidates) {
@@ -217,7 +233,7 @@ export default function ProfileClient() {
           }
         }
 
-        const arrays = [data.photoUrls, data.photos];
+        const arrays = [data.photoUrls];
         for (const arr of arrays) {
           if (Array.isArray(arr)) {
             for (const item of arr) {
@@ -228,6 +244,38 @@ export default function ProfileClient() {
             }
           }
         }
+
+        // hasProfile alanı eksikse, profil verisi veya ismi varsa var kabul et
+        const hasProfile = raw.hasProfile === true || String(raw.hasProfile) === "true" ||
+                          data.hasProfile === true || String(data.hasProfile) === "true" ||
+                          (data.name && data.bio) || (photos.length > 0);
+
+        // Rol Filtresi: RealProfiles.tsx ile senkronize edildi
+        const validRoles = ['companion', 'provider', 'model', 'escort', 'refakatçi', 'refakatci', 'refakat', 'agent', 'agency'];
+        const isCompanion = !role || role === "" || role === "user" || validRoles.some(r => role.includes(r));
+
+        const isListingPendingApproval = raw.isListingPendingApproval === true || nested.isListingPendingApproval === true || data.isListingPendingApproval === true;
+
+        // GÖRÜNME ŞARTI: RealProfiles.tsx ile senkronize edildi.
+        // Android Parity: Hem yönetici onayı (isApproved) hem de kimlik onayı (isVerified) ŞARTTIR.
+        if (isBusy || isInvisible || raw.deletedAt || isExplicitlyPassive || !isApproved || !isVerified || !hasProfile || !isCompanion || isListingPendingApproval) {
+          console.error("Profile not visible (restricted):", { id, isBusy, deletedAt: raw.deletedAt, isInvisible, isExplicitlyPassive, isApproved, isVerified, hasProfile, isCompanion, isListingPendingApproval });
+          setProfile(null);
+          setLoading(false);
+          return;
+        }
+
+        const isActive = isApproved && !isExplicitlyPassive;
+        const meetingCount = Number(data.completedMeetingsCount ?? data.meetingCount ?? 0);
+
+        // Tier Mantığı - RealProfiles ile tam senkronize
+        let level: 'diamond' | 'vip' | 'gold' = 'gold';
+        const rawLevel = String(data.level || data.listingTier || "").toLowerCase();
+        if (rawLevel === 'diamond') level = 'diamond';
+        else if (rawLevel === 'vip') level = 'vip';
+
+        const isElite = (level === 'diamond' || level === 'vip') && isVerified;
+        const isOrange = isApproved && !isVerified;
 
         setProfile({
           id,
@@ -247,6 +295,7 @@ export default function ProfileClient() {
           hasProfile: data.hasProfile !== false,
           isElite,
           isOrange,
+          level,
           meetingCount,
           whatsappNumber: data.whatsappNumber,
           whatsappContactEnabled: data.whatsappContactEnabled === true,
@@ -300,11 +349,10 @@ export default function ProfileClient() {
       // Mobil uygulamanın ve webin beklediği tüm olası ad alanlarını kontrol et
       const senderName = senderData.name || senderData.displayName || senderData.full_name || currentUser.displayName || "Bir Üye";
 
-      // Profil fotoğrafı için öncelik sırası: Firestore URL > Google Auth URL > İlk Profil Fotoğrafı
-      let senderPhoto = senderData.profileImageUrl || senderData.photoUrl || senderData.image || currentUser.photoURL;
-      if (!senderPhoto && Array.isArray(senderData.photos) && senderData.photos.length > 0) {
-        senderPhoto = senderData.photos[0];
-      }
+      // Profil fotoğrafı için öncelik sırası
+      const nested = senderData.profile || {};
+      const combined = { ...senderData, ...nested };
+      const senderPhoto = combined.profileImageUrl || combined.photoUrl || combined.profilePhoto || combined.photoURL || combined.image || (combined.photos && combined.photos[0]) || (combined.photoUrls && combined.photoUrls[0]) || currentUser.photoURL;
 
       // 1. Create message request
       await setDoc(doc(db, "message_requests", chatId), {
@@ -333,6 +381,7 @@ export default function ProfileClient() {
         isActive: false,
         requestStatus: "pending",
         updatedAt: serverTimestamp(),
+        deletedBy: {}, // Clear any previous deletion flags
         [`unreadCount.${rId}`]: 1,
         [`unreadCount.${sId}`]: 0,
       }, { merge: true });
@@ -406,7 +455,7 @@ export default function ProfileClient() {
     <div className="flex min-h-screen items-center justify-center bg-black">
       <div className="flex flex-col items-center gap-6">
         <div className="h-16 w-16 animate-spin rounded-full border-4 border-[#d4af37] border-t-transparent"></div>
-        <p className="text-[10px] font-black text-[#d4af37] uppercase tracking-[0.5em] animate-pulse">LÜKS DENEYİM YÜKLENİYOR</p>
+        <p className="text-[10px] font-black text-[#d4af37] uppercase tracking-[0.5em] animate-pulse leading-relaxed">LÜKS DENEYİM YÜKLENİYOR</p>
       </div>
     </div>
   );
@@ -414,7 +463,7 @@ export default function ProfileClient() {
   if (!profile && !loading) return (
     <div className="min-h-screen bg-black text-white flex flex-col items-center justify-center p-6 text-center">
       <div className="w-24 h-24 bg-[#d4af37]/10 rounded-full flex items-center justify-center text-4xl mb-8 border border-[#d4af37]/20 text-[#d4af37] animate-pulse">!</div>
-      <h2 className="text-3xl font-black uppercase tracking-tighter mb-4">Profil Bulunamadı</h2>
+      <h2 className="text-3xl font-black uppercase tracking-tighter mb-4 leading-tight">Profil Bulunamadı</h2>
       <p className="text-gray-500 max-w-xs mb-8 font-medium">Aradığınız seçkin profil yayından kaldırılmış veya henüz doğrulanmamış olabilir.</p>
       <button
         onClick={() => router.push("/")}
@@ -437,10 +486,10 @@ export default function ProfileClient() {
             <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M15 19l-7-7 7-7"/></svg>
           </button>
           <div className="flex-1 px-4 text-center">
-            <h2 className="font-black text-base tracking-tight truncate uppercase">{profile?.name}</h2>
+            <h2 className="font-black text-base tracking-tight truncate uppercase leading-relaxed">{profile?.name}</h2>
             <div className="flex items-center justify-center gap-2">
               <span className="w-1 h-1 rounded-full bg-[#d4af37] animate-pulse"></span>
-              <p className="text-[8px] text-gray-500 uppercase tracking-[0.3em] font-black">{profile?.city} • {profile?.district}</p>
+              <p className="text-[8px] text-gray-500 uppercase tracking-[0.3em] font-black leading-relaxed">{profile?.city} • {profile?.district}</p>
             </div>
           </div>
           <div className="flex items-center gap-4">
@@ -474,7 +523,7 @@ export default function ProfileClient() {
         <div className="relative group px-4 pt-4">
           <div className="aspect-[4/5] relative overflow-hidden rounded-[2rem] border border-white/10 shadow-2xl">
              {profile && profile.photos && profile.photos.length > 0 ? (
-               <img src={profile.photos[0]} className="w-full h-full object-cover transition-transform duration-1000 group-hover:scale-105" alt={profile.name} />
+               <img src={profile.photos[0]} className="w-full h-full object-cover transition-transform duration-1000 group-hover:scale-105" alt={profile.name} referrerPolicy="no-referrer" />
              ) : (
                <div className="w-full h-full bg-[#0a0a0a] flex items-center justify-center text-8xl opacity-10">👤</div>
              )}
@@ -495,18 +544,18 @@ export default function ProfileClient() {
           <div className="grid grid-cols-4 gap-4 mt-4 px-2">
              {profile?.photos?.slice(1, 4).map((p, i) => (
                <div key={i} className="aspect-square overflow-hidden rounded-2xl bg-[#0a0a0a] border border-white/10">
-                 <img src={p} className="w-full h-full object-cover" alt="" />
+                 <img src={p} className="w-full h-full object-cover" alt="" referrerPolicy="no-referrer" />
                </div>
              ))}
              {profile && profile.photos && profile.photos.length > 4 ? (
                <a
-                 href="https://play.google.com/store"
+                 href="https://play.google.com/store/apps/details?id=com.kiraliksevgili.kiralik_sevgili"
                  target="_blank"
                  rel="noopener noreferrer"
                  className="aspect-square bg-gradient-to-br from-[#1a1608] to-black rounded-2xl flex flex-col items-center justify-center text-center p-3 border border-[#d4af37]/30 hover:border-[#d4af37] transition-all group"
                >
                  <span className="text-xl mb-1 group-hover:scale-110 transition-transform">✨</span>
-                 <span className="text-[8px] font-black text-[#d4af37] uppercase tracking-tighter leading-tight">
+                 <span className="text-[8px] font-black text-[#d4af37] uppercase tracking-tighter leading-relaxed">
                    TÜM FOTOĞRAFLARI GÖR
                  </span>
                </a>
@@ -523,7 +572,7 @@ export default function ProfileClient() {
               <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-white/5 border border-white/10 text-[8px] font-black text-gray-500 uppercase tracking-[0.3em]">
                 Profil Detayları
               </div>
-              <h1 className="text-4xl font-black tracking-tighter text-white uppercase">
+              <h1 className="text-4xl font-black tracking-tighter text-white uppercase leading-tight">
                 {profile?.name}
                 <span className="text-[#d4af37] ml-3 font-medium italic">{profile?.age}</span>
               </h1>
@@ -550,12 +599,12 @@ export default function ProfileClient() {
                   <div className="text-[10px] font-black uppercase tracking-[0.3em] leading-relaxed">
                     BU PROFİLİN KİMLİK ONAYI HENÜZ TAMAMLANMAMIŞTIR.<br/>GÜVENLİK PROSEDÜRLERİ GEREĞİ İLETİŞİM KISITLIDIR.
                   </div>
-                  <a href="https://play.google.com/store" className="inline-block text-[9px] underline font-black tracking-widest mt-1">Detaylar İçin Uygulamayı İndirin</a>
+                  <a href="https://play.google.com/store/apps/details?id=com.kiraliksevgili.kiralik_sevgili" className="inline-block text-[9px] underline font-black tracking-widest mt-1">Detaylar İçin Uygulamayı İndirin</a>
                 </div>
               ) : (
                 <>
                   <div className="flex flex-col gap-2">
-                    {requestStatus === "none" ? (
+                    {(requestStatus === "none" || requestStatus === "deleted" || requestStatus === "rejected") ? (
                       <button
                         onClick={handleConnect}
                         disabled={sendingRequest}
@@ -621,22 +670,30 @@ export default function ProfileClient() {
           <div className="grid grid-cols-3 gap-6 py-8 border-y border-white/5">
             <div className="text-center group">
               <div className="text-2xl font-black text-white mb-0.5 group-hover:scale-110 transition-transform">{profile?.meetingCount}</div>
-              <div className="text-[8px] text-gray-500 uppercase font-black tracking-[0.3em]">Randevu</div>
+              <div className="text-[8px] text-gray-500 uppercase font-black tracking-[0.3em] leading-relaxed">Randevu</div>
             </div>
             <div className="text-center border-x border-white/5 group">
               <div className="text-2xl font-black text-white mb-0.5 group-hover:scale-110 transition-transform">{profile?.gender === "Kadın" ? "♀️" : profile?.gender === "Erkek" ? "♂️" : "⚤"}</div>
-              <div className="text-[8px] text-gray-500 uppercase font-black tracking-[0.3em]">{profile?.gender}</div>
+              <div className="text-[8px] text-gray-500 uppercase font-black tracking-[0.3em] leading-relaxed">{profile?.gender}</div>
             </div>
             <div className="text-center group">
-              <div className="text-2xl font-black text-[#d4af37] mb-0.5 group-hover:scale-110 transition-transform">VIP</div>
-              <div className="text-[8px] text-gray-500 uppercase font-black tracking-[0.3em]">Statü</div>
+              <div className={`text-sm md:text-base font-bold mb-1 tracking-[0.3em] leading-loose group-hover:scale-105 transition-transform ${
+                profile?.level === 'diamond' ? 'text-[#d4af37]' :
+                profile?.level === 'vip' ? 'text-blue-400' : 'text-emerald-400'
+              }`}>
+                {profile?.level === 'diamond' ? (
+                  <span className="inline-flex items-center justify-center w-6 h-6 rounded-lg bg-[#d4af37]/20 text-[#d4af37] font-black text-xs tracking-normal">D</span>
+                ) :
+                 profile?.level === 'vip' ? 'VIP İLAN' : 'STANDART İLAN'}
+              </div>
+              <div className="text-[8px] text-gray-500 uppercase font-medium tracking-[0.3em] leading-loose">Statü</div>
             </div>
           </div>
 
           {/* About / Bio */}
           <div className="space-y-6">
              <div className="flex items-center gap-4">
-               <h3 className="text-[9px] font-black text-gray-500 uppercase tracking-[0.4em]">Hakkında</h3>
+               <h3 className="text-[9px] font-black text-gray-500 uppercase tracking-[0.4em] leading-relaxed">Hakkında</h3>
                <div className="h-[1px] flex-1 bg-white/5"></div>
              </div>
              <p className="text-2xl text-white font-medium italic leading-tight tracking-tight">
@@ -650,8 +707,10 @@ export default function ProfileClient() {
           {/* Prices Detail */}
           <div className="space-y-6">
              <div className="flex items-center justify-between">
-               <h3 className="text-[9px] font-black text-gray-500 uppercase tracking-[0.4em]">Ücretlendirme</h3>
-               <span className="text-[7px] font-black text-[#d4af37] animate-pulse tracking-[0.2em]">PLATİN ÖDEME AKTİF</span>
+               <h3 className="text-[9px] font-bold text-gray-500 uppercase tracking-[0.4em] leading-loose">Ücretlendirme</h3>
+               <span className="text-[7px] font-bold text-[#d4af37] animate-pulse tracking-[0.3em] leading-loose uppercase py-1 px-3 border border-[#d4af37]/20 rounded-full">
+                 PLATİN ÖDEME AKTİF
+               </span>
              </div>
              <div className="grid grid-cols-1 gap-3">
                 <div className="flex justify-between items-center p-5 bg-white/[0.02] rounded-[1.5rem] border border-white/5 hover:border-[#d4af37]/30 transition-all group">
@@ -663,7 +722,7 @@ export default function ProfileClient() {
                    <span className="text-lg font-black text-white group-hover:text-[#d4af37] transition-colors">₺{profile?.prices?.daily || "Görüşülür"}</span>
                 </div>
                 <a
-                  href="https://play.google.com/store"
+                  href="https://play.google.com/store/apps/details?id=com.kiraliksevgili.kiralik_sevgili"
                   target="_blank"
                   rel="noopener noreferrer"
                   className="flex justify-between items-center p-6 bg-gradient-to-r from-black to-[#0f0f0f] rounded-[2rem] border border-dashed border-white/10 hover:border-[#d4af37]/50 transition-all group"
